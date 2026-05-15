@@ -1,10 +1,33 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Users, Settings, Hash, Bot } from "lucide-react";
+
+const MessageList = React.memo(({ messages }: { messages: string[] }) => {
+  return (
+    <>
+      {messages.map((msg, idx) => (
+        <div key={idx} className="flex items-start gap-4">
+          <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 text-neutral-400" />
+          </div>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-medium text-sm">User</span>
+              <span className="text-xs text-neutral-500">Just now</span>
+            </div>
+            <p className="text-neutral-300 mt-1">{msg}</p>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+});
+
+MessageList.displayName = "MessageList";
 
 export default function Home() {
   const socketRef = useRef<Socket | null>(null);
@@ -129,20 +152,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((msg, idx) => (
-            <div key={idx} className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4 text-neutral-400" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-medium text-sm">User</span>
-                  <span className="text-xs text-neutral-500">Just now</span>
-                </div>
-                <p className="text-neutral-300 mt-1">{msg}</p>
-              </div>
-            </div>
-          ))}
+          <MessageList messages={messages} />
         </div>
 
         <div className="p-4 px-6 pb-6">
