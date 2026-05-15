@@ -4,12 +4,22 @@ from .database import create_db_and_tables, get_session
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
 from .auth import get_password_hash, verify_password, create_access_token
 from .encryption import encrypt_token, decrypt_token
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import socketio
 import os
 import uuid
 
 app = FastAPI(title="The Union")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
@@ -164,6 +174,11 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
 def list_workspaces(session: Session = Depends(get_session)):
     workspaces = session.exec(select(Workspace)).all()
     return workspaces
+
+@app.get("/agents")
+def list_agents(session: Session = Depends(get_session)):
+    agents = session.exec(select(Agent)).all()
+    return agents
 
 # Mount socket app
 app.mount("/", socket_app)
