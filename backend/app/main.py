@@ -24,10 +24,15 @@ class SyncTokenRequest(BaseModel):
     agent_id: uuid.UUID
     owner_id: uuid.UUID | None = None
 
+import hmac
+
 @app.post("/sync-token")
 def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Session = Depends(get_session)):
-    expected_api_key = os.getenv("EXTENSION_API_KEY", "static-extension-key")
-    if x_api_key != expected_api_key:
+    expected_api_key = os.getenv("EXTENSION_API_KEY")
+    if not expected_api_key:
+        raise HTTPException(status_code=500, detail="Server configuration error")
+
+    if not x_api_key or not hmac.compare_digest(x_api_key.encode('utf-8'), expected_api_key.encode('utf-8')):
         raise HTTPException(status_code=403, detail="Invalid API Key")
 
     agent = session.exec(select(Agent).where(Agent.id == req.agent_id)).first()

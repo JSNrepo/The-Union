@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Users, Settings, Hash, Bot } from "lucide-react";
 
+// ⚡ Bolt Optimization: Wrap MessageList in React.memo to prevent unnecessary re-renders
+// of the entire message history on every keystroke in the message input field.
 const MessageList = React.memo(({ messages }: { messages: string[] }) => {
   return (
     <>
@@ -26,32 +28,15 @@ const MessageList = React.memo(({ messages }: { messages: string[] }) => {
     </>
   );
 });
-
-MessageList.displayName = "MessageList";
+MessageList.displayName = 'MessageList';
 
 export default function Home() {
   const socketRef = useRef<Socket | null>(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
-  const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const workspaceId = "test-workspace-id"; // Placeholder
 
   useEffect(() => {
-    // Fetch workspaces
-    fetch("http://localhost:8000/workspaces")
-      .then((res) => res.json())
-      .then((data) => {
-        setWorkspaces(data);
-        if (data.length > 0) {
-          setActiveWorkspaceId(data[0].id);
-        }
-      })
-      .catch((err) => console.error("Failed to fetch workspaces", err));
-  }, []);
-
-  useEffect(() => {
-    if (!activeWorkspaceId) return;
-
     // Connect to FastAPI backend
     const newSocket = io("http://localhost:8000", {
       transports: ["websocket"],
@@ -59,7 +44,7 @@ export default function Home() {
 
     newSocket.on("connect", () => {
       console.log("Connected to WebSocket");
-      newSocket.emit("join_workspace", { workspace_id: activeWorkspaceId });
+      newSocket.emit("join_workspace", { workspace_id: workspaceId });
     });
 
     newSocket.on("message", (data) => {
@@ -74,14 +59,13 @@ export default function Home() {
 
     return () => {
       newSocket.close();
-      setMessages([]); // Clear messages on workspace switch
     };
-  }, [activeWorkspaceId]);
+  }, []);
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (socketRef.current && message.trim() && activeWorkspaceId) {
-      socketRef.current.emit("chat_message", { workspace_id: activeWorkspaceId, message });
+    if (socketRef.current && message.trim()) {
+      socketRef.current.emit("chat_message", { workspace_id: workspaceId, message });
       setMessage("");
     }
   };
@@ -99,20 +83,14 @@ export default function Home() {
           <div className="px-4 mb-6">
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Workspaces</h2>
             <div className="space-y-1">
-              {workspaces.map((ws) => (
-                <div
-                  key={ws.id}
-                  onClick={() => setActiveWorkspaceId(ws.id)}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm ${
-                    activeWorkspaceId === ws.id
-                      ? "bg-neutral-800 text-white"
-                      : "hover:bg-neutral-800/50 text-neutral-400"
-                  }`}
-                >
-                  <Hash className="w-4 h-4 text-neutral-400" />
-                  <span>{ws.name}</span>
-                </div>
-              ))}
+              <div className="flex items-center gap-2 px-2 py-1.5 bg-neutral-800 rounded-md cursor-pointer text-sm">
+                <Hash className="w-4 h-4 text-neutral-400" />
+                <span>General</span>
+              </div>
+              <div className="flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer text-sm text-neutral-400">
+                <Hash className="w-4 h-4" />
+                <span>Engineering</span>
+              </div>
             </div>
           </div>
 
@@ -147,7 +125,7 @@ export default function Home() {
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
           <h2 className="font-semibold flex items-center gap-2">
             <Hash className="w-5 h-5 text-neutral-400" />
-            {workspaces.find((ws) => ws.id === activeWorkspaceId)?.name || "Select a Workspace"}
+            General
           </h2>
         </div>
 

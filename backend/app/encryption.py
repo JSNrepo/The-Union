@@ -5,7 +5,10 @@ import base64
 import uuid
 
 def get_encryption_key():
-    master_key = os.getenv("UNION_MASTER_KEY", "default-insecure-master-key-must-change")
+    master_key = os.getenv("UNION_MASTER_KEY")
+    if not master_key:
+        raise RuntimeError("UNION_MASTER_KEY environment variable is not set")
+
     # Optional hardware salt. If not available, we use a fallback.
     try:
         hw_salt = str(uuid.getnode())
