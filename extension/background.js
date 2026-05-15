@@ -1,9 +1,8 @@
 const BACKEND_URL = "http://localhost:8000/sync-token";
 const API_KEY = "static-extension-key";
-// In a real app, agent_id would be configured by the user in the extension options.
-const AGENT_ID_CLAUDE = "claude-agent-uuid-placeholder";
 
 async function syncToken(provider, token, agentId) {
+  if (!agentId) return;
   try {
     const response = await fetch(BACKEND_URL, {
       method: "POST",
@@ -24,15 +23,37 @@ async function syncToken(provider, token, agentId) {
 }
 
 async function checkCookies() {
-  // Claude Example
-  chrome.cookies.get({ url: "https://claude.ai", name: "sessionKey" }, (cookie) => {
-    if (cookie) {
-      console.log("Found Claude cookie!");
-      syncToken("claude", cookie.value, AGENT_ID_CLAUDE);
+  chrome.storage.local.get(['claudeAgentId', 'geminiAgentId', 'openaiAgentId'], (items) => {
+    // Claude Example
+    if (items.claudeAgentId) {
+      chrome.cookies.get({ url: "https://claude.ai", name: "sessionKey" }, (cookie) => {
+        if (cookie) {
+          console.log("Found Claude cookie!");
+          syncToken("claude", cookie.value, items.claudeAgentId);
+        }
+      });
+    }
+
+    // Gemini
+    if (items.geminiAgentId) {
+      chrome.cookies.get({ url: "https://gemini.google.com", name: "__Secure-1PSID" }, (cookie) => {
+        if (cookie) {
+          console.log("Found Gemini cookie!");
+          syncToken("gemini", cookie.value, items.geminiAgentId);
+        }
+      });
+    }
+
+    // OpenAI
+    if (items.openaiAgentId) {
+      chrome.cookies.get({ url: "https://chatgpt.com", name: "__Secure-next-auth.session-token" }, (cookie) => {
+        if (cookie) {
+          console.log("Found OpenAI cookie!");
+          syncToken("openai", cookie.value, items.openaiAgentId);
+        }
+      });
     }
   });
-
-  // Gemini and OpenAI can be added similarly based on their specific cookie names
 }
 
 chrome.runtime.onInstalled.addListener(() => {
