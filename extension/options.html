@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>The Union Token Bridge Options</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 5px;
+    }
+    button {
+      padding: 8px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #status {
+      margin-top: 15px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>The Union Token Bridge Settings</h1>
+  <div class="form-group">
+    <label for="claudeAgentId">Claude Agent ID:</label>
+    <input type="text" id="claudeAgentId">
+  </div>
+  <div class="form-group">
+    <label for="geminiAgentId">Gemini Agent ID:</label>
+    <input type="text" id="geminiAgentId">
+  </div>
+  <div class="form-group">
+    <label for="openaiAgentId">OpenAI Agent ID:</label>
+    <input type="text" id="openaiAgentId">
+  </div>
+  <button id="saveButton">Save</button>
+  <div id="status"></div>
+  <script src="options.js"></script>
+</body>
+</html>
