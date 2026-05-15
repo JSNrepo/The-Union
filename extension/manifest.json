@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "The Union Token Bridge",
+  "version": "1.0",
+  "description": "Extracts session cookies for The Union's AI Pooling.",
+  "permissions": [
+    "cookies",
+    "alarms",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.anthropic.com/*",
+    "*://*.openai.com/*",
+    "*://*.google.com/*",
+    "http://localhost:8000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
