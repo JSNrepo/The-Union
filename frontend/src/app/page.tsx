@@ -51,18 +51,22 @@ export default function Home() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
-    // Fetch initial data
+    // ⚡ Bolt Optimization: Use Promise.all to fetch workspaces and agents concurrently,
+    // reducing initial load time and preventing sequential blocking.
     const fetchData = async () => {
       try {
-        const wsRes = await fetch(`${apiUrl}/workspaces`);
+        const [wsRes, agentRes] = await Promise.all([
+          fetch(`${apiUrl}/workspaces`),
+          fetch(`${apiUrl}/agents`)
+        ]);
+
         const wsData: Workspace[] = await wsRes.json();
+        const agentData: Agent[] = await agentRes.json();
+
         setWorkspaces(wsData);
         if (wsData.length > 0) {
           setActiveWorkspace(wsData[0]);
         }
-
-        const agentRes = await fetch(`${apiUrl}/agents`);
-        const agentData: Agent[] = await agentRes.json();
         setAgents(agentData);
       } catch (err) {
         console.error("Error fetching data:", err);
