@@ -41,9 +41,43 @@ interface Agent {
   provider: string;
 }
 
+// ⚡ Bolt Optimization: Extract MessageInput to its own component so that typing
+// doesn't trigger a re-render of the entire Home component (and Sidebar).
+const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string) => void, disabled: boolean }) => {
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim() && !disabled) {
+      onSendMessage(message);
+      setMessage("");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="relative">
+      <Input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Message @agents or team..."
+        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-12 focus-visible:ring-1 focus-visible:ring-neutral-600"
+      />
+      <Button
+        type="submit"
+        size="icon"
+        variant="ghost"
+        className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+        disabled={!message.trim() || disabled}
+        aria-label="Send message"
+      >
+        <MessageSquare className="w-4 h-4" />
+      </Button>
+    </form>
+  );
+};
+
 export default function Home() {
   const socketRef = useRef<Socket | null>(null);
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -104,11 +138,9 @@ export default function Home() {
     };
   }, [apiUrl, activeWorkspace, activeWorkspace?.id]);
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (socketRef.current && message.trim() && activeWorkspace) {
-      socketRef.current.emit("chat_message", { workspace_id: activeWorkspace.id, message });
-      setMessage("");
+  const handleSendMessage = (msg: string) => {
+    if (socketRef.current && activeWorkspace) {
+      socketRef.current.emit("chat_message", { workspace_id: activeWorkspace.id, message: msg });
     }
   };
 
@@ -181,24 +213,7 @@ export default function Home() {
         </div>
 
         <div className="p-4 px-6 pb-6">
-          <form onSubmit={sendMessage} className="relative">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Message @agents or team..."
-              className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-12 focus-visible:ring-1 focus-visible:ring-neutral-600"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              variant="ghost"
-              className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
-              disabled={!message.trim()}
-              aria-label="Send message"
-            >
-              <MessageSquare className="w-4 h-4" />
-            </Button>
-          </form>
+          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} />
         </div>
       </div>
     </div>
