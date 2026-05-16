@@ -12,15 +12,17 @@ import uuid
 
 app = FastAPI(title="The Union")
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 @app.on_event("startup")
@@ -134,7 +136,8 @@ async def chat_message(sid, data):
                                 ai_response = await call_provider_api(agent.provider, token, message)
                                 await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
                             except Exception as e:
-                                await sio.emit('chat_update', {'msg': f"Error from {agent.name}: {str(e)}"}, room=workspace_id)
+                                print(f"Error calling provider for agent {agent.name}: {str(e)}") # Secure logging
+                                await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent.name}."}, room=workspace_id)
                         else:
                             await sio.emit('chat_update', {'msg': f"Agent {agent.name} is offline (no token available)."}, room=workspace_id)
 
@@ -218,4 +221,5 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
         response_text = await call_provider_api(agent.provider, token, req.prompt)
         return {"response": response_text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Proxy request error for agent {agent.id}: {str(e)}") # Secure logging
+        raise HTTPException(status_code=500, detail="An internal error occurred while communicating with the AI provider.")
