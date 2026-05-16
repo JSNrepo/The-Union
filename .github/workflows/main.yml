@@ -15,9 +15,11 @@ jobs:
     steps:
       # Step 2.1: Automatically approve the Pull Request
       - name: Auto Approve PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr review --approve "$PR_URL"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        continue-on-error: true
 
       # Step 2.2: Set the PR to automatically merge once status checks pass
       - name: Enable GitHub Auto-Merge
