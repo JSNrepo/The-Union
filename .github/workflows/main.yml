@@ -12,8 +12,8 @@ jobs:
       contents: write
 
     steps:
-      # We removed the hmarr/auto-approve-action step completely to bypass the permission bug
-      - name: Enable GitHub Auto-Merge
+      # Bypass the third-party approval step to completely eliminate the permission error
+      - name: Force Enable Auto-Merge
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
