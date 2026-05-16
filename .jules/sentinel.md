@@ -2,3 +2,8 @@
 **Vulnerability:** Found hardcoded fallback secrets for `EXTENSION_API_KEY`, `SECRET_KEY`, and `UNION_MASTER_KEY` in `backend/app/main.py`, `backend/app/auth.py`, and `backend/app/encryption.py`. Additionally, the API key verification was vulnerable to timing attacks via a simple equality check `x_api_key != expected_api_key`.
 **Learning:** Default fallback secrets in environments without explicitly set variables bypass intended security configurations, exposing the application to unauthorized access. Standard equality operators for string comparisons in authentication mechanisms leak the duration of character mismatches, allowing attackers to incrementally guess valid keys.
 **Prevention:** Remove all fallback values for critical secrets from the codebase; fail securely by throwing an error (`RuntimeError` or `HTTPException`) when required secrets are missing. Always use constant-time comparison functions like `hmac.compare_digest` for validating authentication tokens, passwords, or API keys.
+
+## 2025-06-15 - [Overly Permissive CORS and Error Leakage]
+**Vulnerability:** The FastAPI backend used wildcard `*` for CORS origins and WebSocket origins, allowing any website to make local API requests. Error handlers also exposed raw internal exception messages to the client.
+**Learning:** Local services are highly vulnerable to cross-origin exploitation since they bypass network firewalls. Exposing raw error strings (`str(e)`) violates "fail securely" by leaking internal system state, proxy URLs, or tokens.
+**Prevention:** Use an explicit allowlist for CORS configuration, preferably loaded from environment variables. Log detailed error information securely on the backend while returning generic, safe error messages to clients.
