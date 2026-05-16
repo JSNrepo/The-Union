@@ -114,7 +114,9 @@ export default function Home() {
       <div className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col">
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
-          <Settings className="w-5 h-5 text-neutral-400 cursor-pointer hover:text-white" />
+          <button aria-label="Settings" className="text-neutral-400 hover:text-white transition-colors">
+            <Settings className="w-5 h-5 cursor-pointer" />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">
@@ -185,7 +187,9 @@ export default function Home() {
               type="submit"
               size="icon"
               variant="ghost"
-              className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700"
+              className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+              disabled={!message.trim()}
+              aria-label="Send message"
             >
               <MessageSquare className="w-4 h-4" />
             </Button>
