@@ -128,18 +128,19 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Workspaces</h2>
             <div className="space-y-1">
               {workspaces.map((ws) => (
-                <div
+                <button
                   key={ws.id}
                   onClick={() => setActiveWorkspace(ws)}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm ${
+                  className={`flex items-center w-full text-left gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 ${
                     activeWorkspace?.id === ws.id
                       ? "bg-neutral-800 text-white"
                       : "hover:bg-neutral-800/50 text-neutral-400"
                   }`}
+                  aria-current={activeWorkspace?.id === ws.id ? "true" : undefined}
                 >
-                  <Hash className="w-4 h-4" />
-                  <span>{ws.name}</span>
-                </div>
+                  <Hash className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{ws.name}</span>
+                </button>
               ))}
             </div>
           </div>
