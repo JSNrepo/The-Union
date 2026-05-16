@@ -2,24 +2,17 @@ name: Auto Approve and Merge
 
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronized]
 
 jobs:
   automation:
     runs-on: ubuntu-latest
-    # Grants the workflow token authority to approve PRs and write contents
     permissions:
       pull-requests: write
       contents: write
 
     steps:
-      # Step 2.1: Automatically approve the Pull Request
-      - name: Auto Approve PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # Step 2.2: Set the PR to automatically merge once status checks pass
+      # Removed the auto-approve step to prevent self-approval errors
       - name: Enable GitHub Auto-Merge
         run: gh pr merge --auto --squash "$PR_URL"
         env:
