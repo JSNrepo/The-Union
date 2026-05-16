@@ -1,0 +1,1 @@
+## 2024-05-15 - [Initial Data Fetching Bottleneck]\n**Learning:** The frontend initially loaded critical app data (`workspaces` and `agents`) sequentially in `useEffect`, which doubled the network latency for the initial render. \n**Action:** Use `Promise.all` for independent initial data fetches to execute them concurrently and improve initial load time.
