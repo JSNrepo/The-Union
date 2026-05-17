@@ -20,7 +20,8 @@ class Workspace(SQLModel, table=True):
 
 class Agent(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str
+    # ⚡ Bolt Optimization: Add index to name field as it is queried frequently during chat interception
+    name: str = Field(index=True)
     owner_id: uuid.UUID = Field(foreign_key="user.id")
     owner: User = Relationship(back_populates="agents")
     workspace_id: Optional[uuid.UUID] = Field(default=None, foreign_key="workspace.id")
@@ -28,6 +29,7 @@ class Agent(SQLModel, table=True):
 
 class TokenPool(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    agent_id: uuid.UUID = Field(foreign_key="agent.id")
+    # ⚡ Bolt Optimization: Add unique index to agent_id to speed up token lookups and enforce 1:1 mapping
+    agent_id: uuid.UUID = Field(foreign_key="agent.id", index=True, unique=True)
     owner_user_id: uuid.UUID = Field(foreign_key="user.id")
     encrypted_session_token: str
