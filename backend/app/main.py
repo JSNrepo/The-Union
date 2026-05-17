@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
 from .database import create_db_and_tables, get_session
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
-from .auth import get_password_hash, verify_password, create_access_token
+from .auth import get_password_hash, verify_password, create_access_token, get_current_user
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -167,7 +167,7 @@ class WorkspaceCreate(BaseModel):
     name: str
 
 @app.post("/workspaces")
-def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session)) -> Workspace:
+def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Workspace:
     ws = Workspace(name=req.name)
     session.add(ws)
     session.commit()
@@ -175,12 +175,12 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
     return ws
 
 @app.get("/workspaces")
-def list_workspaces(session: Session = Depends(get_session)) -> list[Workspace]:
+def list_workspaces(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Workspace]:
     workspaces = session.exec(select(Workspace)).all()
     return list(workspaces)
 
 @app.get("/agents")
-def list_agents(session: Session = Depends(get_session)) -> list[Agent]:
+def list_agents(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Agent]:
     agents = session.exec(select(Agent)).all()
     return list(agents)
 
@@ -205,7 +205,7 @@ class ProxyRequest(BaseModel):
     prompt: str
 
 @app.post("/proxy-request")
-async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session)) -> dict[str, str]:
+async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
     agent = session.exec(select(Agent).where(Agent.id == req.agent_id)).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
