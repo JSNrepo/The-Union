@@ -4,7 +4,7 @@ import hashlib
 import base64
 import uuid
 
-def get_encryption_key():
+def get_encryption_key() -> bytes:
     master_key = os.getenv("UNION_MASTER_KEY")
     if not master_key:
         raise RuntimeError("UNION_MASTER_KEY environment variable is not set")
