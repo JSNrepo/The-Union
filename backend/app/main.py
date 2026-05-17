@@ -26,7 +26,7 @@ sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGI
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
 
 @app.on_event("startup")
-def on_startup():
+def on_startup() -> None:
     create_db_and_tables()
 
 # Sync endpoint for Chrome Extension
@@ -37,9 +37,10 @@ class SyncTokenRequest(BaseModel):
     owner_id: uuid.UUID | None = None
 
 import hmac
+from typing import Any
 
 @app.post("/sync-token")
-def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Session = Depends(get_session)):
+def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Session = Depends(get_session)) -> dict[str, str]:
     expected_api_key = os.getenv("EXTENSION_API_KEY")
     if not expected_api_key:
         raise HTTPException(status_code=500, detail="Server configuration error")
@@ -68,11 +69,11 @@ def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Se
 
 # Socket.IO Event Handlers
 @sio.event
-async def connect(sid, environ):
+async def connect(sid: str, environ: dict) -> None:
     print(f"Client connected: {sid}")
 
 @sio.event
-async def join_workspace(sid, data):
+async def join_workspace(sid: str, data: dict) -> None:
     workspace_id = data.get('workspace_id')
     sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
@@ -110,7 +111,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
             raise Exception("Unsupported provider")
 
 @sio.event
-async def chat_message(sid, data):
+async def chat_message(sid: str, data: dict) -> None:
     workspace_id = data.get('workspace_id')
     message = data.get('message')
     await sio.emit('chat_update', {'msg': message}, room=workspace_id)
@@ -142,7 +143,7 @@ async def chat_message(sid, data):
                             await sio.emit('chat_update', {'msg': f"Agent {agent.name} is offline (no token available)."}, room=workspace_id)
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid: str) -> None:
     print(f"Client disconnected: {sid}")
 
 # Basic Auth routes to test
@@ -151,7 +152,7 @@ class UserCreate(BaseModel):
     password: str
 
 @app.post("/register")
-def register(user: UserCreate, session: Session = Depends(get_session)):
+def register(user: UserCreate, session: Session = Depends(get_session)) -> dict[str, str]:
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -166,7 +167,7 @@ class WorkspaceCreate(BaseModel):
     name: str
 
 @app.post("/workspaces")
-def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session)):
+def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session)) -> Workspace:
     ws = Workspace(name=req.name)
     session.add(ws)
     session.commit()
@@ -174,14 +175,14 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
     return ws
 
 @app.get("/workspaces")
-def list_workspaces(session: Session = Depends(get_session)):
+def list_workspaces(session: Session = Depends(get_session)) -> list[Workspace]:
     workspaces = session.exec(select(Workspace)).all()
-    return workspaces
+    return list(workspaces)
 
 @app.get("/agents")
-def list_agents(session: Session = Depends(get_session)):
+def list_agents(session: Session = Depends(get_session)) -> list[Agent]:
     agents = session.exec(select(Agent)).all()
-    return agents
+    return list(agents)
 
 # Mount socket app
 app.mount("/", socket_app)
@@ -191,7 +192,7 @@ class LoginRequest(BaseModel):
     password: str
 
 @app.post("/login")
-def login(req: LoginRequest, session: Session = Depends(get_session)):
+def login(req: LoginRequest, session: Session = Depends(get_session)) -> dict[str, str]:
     user = session.exec(select(User).where(User.username == req.username)).first()
     if not user or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -204,7 +205,7 @@ class ProxyRequest(BaseModel):
     prompt: str
 
 @app.post("/proxy-request")
-async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session)):
+async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session)) -> dict[str, str]:
     agent = session.exec(select(Agent).where(Agent.id == req.agent_id)).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
