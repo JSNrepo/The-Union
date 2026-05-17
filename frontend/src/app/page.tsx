@@ -150,7 +150,7 @@ export default function Home() {
       <div className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col">
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
-          <button aria-label="Settings" className="text-neutral-400 hover:text-white transition-colors">
+          <button aria-label="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md">
             <Settings className="w-5 h-5 cursor-pointer" />
           </button>
         </div>
@@ -181,9 +181,9 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">AI Pool</h2>
             <div className="space-y-2">
               {agents.map((agent) => (
-                <div
+                <button
                   key={agent.id}
-                  className="flex items-center justify-between px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer"
+                  className="flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
@@ -191,8 +191,8 @@ export default function Home() {
                     </div>
                     <span className="text-sm">{agent.name}</span>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                </div>
+                  <div className="w-2 h-2 rounded-full bg-green-500" role="status" aria-label="Online"></div>
+                </button>
               ))}
             </div>
           </div>
@@ -208,8 +208,20 @@ export default function Home() {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <MessageList messages={messages} />
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+              <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-neutral-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-medium text-neutral-300">No messages yet</p>
+                <p className="text-sm">Start the conversation in {activeWorkspace?.name || "this workspace"}</p>
+              </div>
+            </div>
+          ) : (
+            <MessageList messages={messages} />
+          )}
         </div>
 
         <div className="p-4 px-6 pb-6">
