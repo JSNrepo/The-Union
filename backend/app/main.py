@@ -125,22 +125,31 @@ async def chat_message(sid: str, data: dict) -> None:
                 agent_name = word[1:]
                 # We need a db session
                 from .database import engine
+
+                # ⚡ Bolt Optimization: Extract token and provider inside DB session and close it
+                # immediately to avoid connection pool exhaustion during slow LLM API calls.
+                agent_info = None
                 with Session(engine) as session:
                     agent = session.exec(select(Agent).where(Agent.name == agent_name)).first()
                     if agent:
                         pool_entry = session.exec(select(TokenPool).where(TokenPool.agent_id == agent.id)).first()
                         if pool_entry:
                             token = decrypt_token(pool_entry.encrypted_session_token)
-                            print(f"Intercepted message for {agent.name}, proxying request...")
-
-                            try:
-                                ai_response = await call_provider_api(agent.provider, token, message)
-                                await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
-                            except Exception as e:
-                                print(f"Error calling provider for agent {agent.name}: {str(e)}") # Secure logging
-                                await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent.name}."}, room=workspace_id)
+                            agent_info = {"name": agent.name, "provider": agent.provider, "token": token}
                         else:
-                            await sio.emit('chat_update', {'msg': f"Agent {agent.name} is offline (no token available)."}, room=workspace_id)
+                            agent_info = {"name": agent.name, "offline": True}
+
+                if agent_info:
+                    if agent_info.get("offline"):
+                        await sio.emit('chat_update', {'msg': f"Agent {agent_info['name']} is offline (no token available)."}, room=workspace_id)
+                    else:
+                        print(f"Intercepted message for {agent_info['name']}, proxying request...")
+                        try:
+                            ai_response = await call_provider_api(agent_info["provider"], agent_info["token"], message)
+                            await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
+                        except Exception as e:
+                            print(f"Error calling provider for agent {agent_info['name']}: {str(e)}") # Secure logging
+                            await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent_info['name']}."}, room=workspace_id)
 
 @sio.event
 async def disconnect(sid: str) -> None:
