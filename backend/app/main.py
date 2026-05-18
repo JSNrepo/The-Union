@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
-socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
+socket_app = socketio.ASGIApp(sio, socketio_path="")
 
 @app.on_event("startup")
 def on_startup() -> None:
@@ -185,7 +185,7 @@ def list_agents(session: Session = Depends(get_session), current_user: User = De
     return list(agents)
 
 # Mount socket app
-app.mount("/", socket_app)
+app.mount("/socket.io", socket_app)
 
 class LoginRequest(BaseModel):
     username: str
