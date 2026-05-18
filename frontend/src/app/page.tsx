@@ -59,8 +59,10 @@ const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Message @agents or team..."
+        placeholder={disabled ? "Select a workspace to message..." : "Message @agents or team..."}
         className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-12 focus-visible:ring-1 focus-visible:ring-neutral-600"
+        disabled={disabled}
+        aria-label="Message input"
       />
       <Button
         type="submit"

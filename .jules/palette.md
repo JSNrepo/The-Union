@@ -9,3 +9,7 @@
 ## 2025-05-17 - [Empty States in Dynamic Lists]
 **Learning:** Initializing chat interfaces or dynamic lists with a completely blank area can leave users confused about what to do next or whether the application has loaded successfully.
 **Action:** Always provide a visually distinct "empty state" component with helpful icon, text, and guidance (e.g., "No messages yet. Start the conversation in...") when the data array is empty.
+
+## 2025-05-18 - [Holistic Disabled States in Forms]
+**Learning:** Visually disabling a form's action button is insufficient UX; the associated inputs should also be disabled when the action cannot be performed (e.g. no active workspace selected). Leaving an input active while the submit button is disabled allows users to type into a useless field, causing confusion.
+**Action:** Always ensure that disabled states are applied holistically to the entire form or input group, and visually communicate *why* they are disabled (e.g., via a contextual placeholder like "Select a workspace to message...").
