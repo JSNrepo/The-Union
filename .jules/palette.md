@@ -13,3 +13,6 @@
 ## 2025-05-18 - [Holistic Disabled States in Forms]
 **Learning:** Visually disabling a form's action button is insufficient UX; the associated inputs should also be disabled when the action cannot be performed (e.g. no active workspace selected). Leaving an input active while the submit button is disabled allows users to type into a useless field, causing confusion.
 **Action:** Always ensure that disabled states are applied holistically to the entire form or input group, and visually communicate *why* they are disabled (e.g., via a contextual placeholder like "Select a workspace to message...").
+## 2024-05-19 - Screen reader support for dynamic auto-scrolling chat
+**Learning:** For dynamic auto-scrolling chat lists where messages are added dynamically, users with screen readers might not notice new content unless they navigate to it.
+**Action:** Always add `role="log"` (and optionally `aria-live="polite"`) to the container holding chat messages. This ensures that screen readers correctly and politely announce new dynamically added elements without interrupting the user.

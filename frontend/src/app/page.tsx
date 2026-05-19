@@ -9,6 +9,12 @@ import { MessageSquare, Users, Settings, Hash, Bot } from "lucide-react";
 // ⚡ Bolt Optimization: Wrap MessageList in React.memo to prevent unnecessary re-renders
 // of the entire message history on every keystroke in the message input field.
 const MessageList = React.memo(({ messages }: { messages: string[] }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
     <>
       {messages.map((msg, idx) => (
@@ -25,6 +31,7 @@ const MessageList = React.memo(({ messages }: { messages: string[] }) => {
           </div>
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </>
   );
 });
@@ -210,7 +217,7 @@ export default function Home() {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col" role="log" aria-live="polite">
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
