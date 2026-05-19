@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import socketio
 import os
 import uuid
+import httpx
 
 app = FastAPI(title="The Union")
 
@@ -25,9 +26,17 @@ app.add_middleware(
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=ALLOWED_ORIGINS)
 socket_app = socketio.ASGIApp(sio, socketio_path="")
 
+# ⚡ Bolt Optimization: Use a global HTTP transport to share the TCP connection pool
+# safely across requests without sharing stateful data like cookies.
+shared_transport = httpx.AsyncHTTPTransport()
+
 @app.on_event("startup")
 def on_startup() -> None:
     create_db_and_tables()
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    await shared_transport.aclose()
 
 # Sync endpoint for Chrome Extension
 class SyncTokenRequest(BaseModel):
@@ -78,34 +87,32 @@ async def join_workspace(sid: str, data: dict) -> None:
     sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
 
-import httpx
-
 async def call_provider_api(provider: str, token: str, prompt: str) -> str:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(transport=shared_transport) as client:
         if provider == "openai":
             res = await client.post(
-                "https://chatgpt.com/backend-api/conversation",
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-                json={
-                    "action": "next",
-                    "messages": [{"id": str(uuid.uuid4()), "role": "user", "content": {"content_type": "text", "parts": [prompt]}}],
-                    "model": "text-davinci-002-render-sha"
-                }
-            )
+                    "https://chatgpt.com/backend-api/conversation",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                    json={
+                        "action": "next",
+                        "messages": [{"id": str(uuid.uuid4()), "role": "user", "content": {"content_type": "text", "parts": [prompt]}}],
+                        "model": "text-davinci-002-render-sha"
+                    }
+                )
             return f"OpenAI: {res.text[:100]}..."
         elif provider == "claude":
             res = await client.post(
-                "https://claude.ai/api/append_message",
-                headers={"Cookie": f"sessionKey={token}", "Content-Type": "application/json"},
-                json={"prompt": prompt}
-            )
+                    "https://claude.ai/api/append_message",
+                    headers={"Cookie": f"sessionKey={token}", "Content-Type": "application/json"},
+                    json={"prompt": prompt}
+                )
             return f"Claude: {res.text[:100]}..."
         elif provider == "gemini":
             res = await client.post(
-                "https://gemini.google.com/_/BardChat/data/batchexecute",
-                headers={"Cookie": f"__Secure-1PSID={token}", "Content-Type": "application/x-www-form-urlencoded"},
-                data={"f.req": prompt}
-            )
+                    "https://gemini.google.com/_/BardChat/data/batchexecute",
+                    headers={"Cookie": f"__Secure-1PSID={token}", "Content-Type": "application/x-www-form-urlencoded"},
+                    data={"f.req": prompt}
+                )
             return f"Gemini: {res.text[:100]}..."
         else:
             raise Exception("Unsupported provider")
