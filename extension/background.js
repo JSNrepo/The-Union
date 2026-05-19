@@ -1,14 +1,13 @@
 const BACKEND_URL = "http://localhost:8000/sync-token";
-const API_KEY = "static-extension-key";
 
-async function syncToken(provider, token, agentId) {
-  if (!agentId) return;
+async function syncToken(provider, token, agentId, apiKey) {
+  if (!agentId || !apiKey) return;
   try {
     const response = await fetch(BACKEND_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": API_KEY
+        "x-api-key": apiKey
       },
       body: JSON.stringify({
         provider: provider,
@@ -23,13 +22,19 @@ async function syncToken(provider, token, agentId) {
 }
 
 async function checkCookies() {
-  chrome.storage.local.get(['claudeAgentId', 'geminiAgentId', 'openaiAgentId'], (items) => {
+  chrome.storage.local.get(['claudeAgentId', 'geminiAgentId', 'openaiAgentId', 'apiKey'], (items) => {
+    const apiKey = items.apiKey;
+    if (!apiKey) {
+      console.error("API Key not configured in options.");
+      return;
+    }
+
     // Claude Example
     if (items.claudeAgentId) {
       chrome.cookies.get({ url: "https://claude.ai", name: "sessionKey" }, (cookie) => {
         if (cookie) {
           console.log("Found Claude cookie!");
-          syncToken("claude", cookie.value, items.claudeAgentId);
+          syncToken("claude", cookie.value, items.claudeAgentId, apiKey);
         }
       });
     }
@@ -39,7 +44,7 @@ async function checkCookies() {
       chrome.cookies.get({ url: "https://gemini.google.com", name: "__Secure-1PSID" }, (cookie) => {
         if (cookie) {
           console.log("Found Gemini cookie!");
-          syncToken("gemini", cookie.value, items.geminiAgentId);
+          syncToken("gemini", cookie.value, items.geminiAgentId, apiKey);
         }
       });
     }
@@ -49,7 +54,7 @@ async function checkCookies() {
       chrome.cookies.get({ url: "https://chatgpt.com", name: "__Secure-next-auth.session-token" }, (cookie) => {
         if (cookie) {
           console.log("Found OpenAI cookie!");
-          syncToken("openai", cookie.value, items.openaiAgentId);
+          syncToken("openai", cookie.value, items.openaiAgentId, apiKey);
         }
       });
     }
