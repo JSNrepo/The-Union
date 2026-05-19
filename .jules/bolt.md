@@ -9,3 +9,6 @@
 ## 2024-05-18 - DB connection pool exhaustion during external API calls
 **Learning:** Holding an open database session during slow network requests (like long-running LLM API calls) inside Socket.IO event handlers can quickly exhaust the database connection pool under load, creating a severe performance bottleneck and potential crashes.
 **Action:** Always fetch required database objects, eagerly extract the specific data points needed, and immediately close the DB session before making external async network calls.
+## 2024-05-19 - [LLM Proxy Connection Pooling]
+**Learning:** Instantiating a new `httpx.AsyncClient()` inside the hot path for every proxied request to an LLM provider introduces significant latency due to repeated TCP connection and TLS handshake overhead. However, using a globally shared `httpx.AsyncClient()` introduces a critical security vulnerability by sharing its stateful `CookieJar` across distinct user sessions.
+**Action:** Always utilize a global, reused HTTP transport instance (e.g., `shared_transport = httpx.AsyncHTTPTransport()`) and pass it to a localized `httpx.AsyncClient(transport=shared_transport)` to benefit from stateless HTTP connection pooling without leaking cookies or other state across users. Handle its lifecycle during app startup/shutdown.
