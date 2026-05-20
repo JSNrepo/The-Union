@@ -78,6 +78,7 @@ const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string
         className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
         disabled={!message.trim() || disabled}
         aria-label="Send message"
+        title={disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
       >
         <MessageSquare className="w-4 h-4" />
       </Button>
@@ -213,19 +214,29 @@ export default function Home() {
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
           <h2 className="font-semibold flex items-center gap-2">
             <Hash className="w-5 h-5 text-neutral-400" />
-            {activeWorkspace?.name || "Loading..."}
+            {activeWorkspace?.name || "Select a Workspace"}
           </h2>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col" role="log" aria-live="polite">
-          {messages.length === 0 ? (
+          {!activeWorkspace ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+              <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
+                <Hash className="w-6 h-6 text-neutral-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-medium text-neutral-300">No workspace selected</p>
+                <p className="text-sm">Choose a workspace from the sidebar to start messaging</p>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-neutral-400" />
               </div>
               <div className="text-center">
                 <p className="text-lg font-medium text-neutral-300">No messages yet</p>
-                <p className="text-sm">Start the conversation in {activeWorkspace?.name || "this workspace"}</p>
+                <p className="text-sm">Start the conversation in {activeWorkspace.name}</p>
               </div>
             </div>
           ) : (
