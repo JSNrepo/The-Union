@@ -142,9 +142,15 @@ async def chat_message(sid: str, data: dict) -> None:
                 # immediately to avoid connection pool exhaustion during slow LLM API calls.
                 agent_info = None
                 with Session(engine) as session:
-                    agent = session.exec(select(Agent).where(Agent.name == agent_name)).first()
-                    if agent:
-                        pool_entry = session.exec(select(TokenPool).where(TokenPool.agent_id == agent.id)).first()
+                    # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
+                    # simultaneously, eliminating the N+1 sequential database queries in the hot path.
+                    result = session.exec(
+                        select(Agent, TokenPool)
+                        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+                        .where(Agent.name == agent_name)
+                    ).first()
+                    if result:
+                        agent, pool_entry = result
                         if pool_entry:
                             token = decrypt_token(pool_entry.encrypted_session_token)
                             agent_info = {"name": agent.name, "provider": agent.provider, "token": token}
