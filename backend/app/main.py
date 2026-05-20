@@ -5,7 +5,7 @@ from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
 from .auth import get_password_hash, verify_password, create_access_token, get_current_user
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import socketio
 import os
 import uuid
@@ -40,8 +40,8 @@ async def on_shutdown() -> None:
 
 # Sync endpoint for Chrome Extension
 class SyncTokenRequest(BaseModel):
-    provider: str
-    token: str
+    provider: str = Field(..., min_length=1, max_length=50)
+    token: str = Field(..., min_length=1, max_length=4000)
     agent_id: uuid.UUID
     owner_id: uuid.UUID | None = None
 
@@ -121,6 +121,11 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
 async def chat_message(sid: str, data: dict) -> None:
     workspace_id = data.get('workspace_id')
     message = data.get('message')
+
+    # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
+    if not isinstance(message, str) or len(message) > 5000:
+        return
+
     await sio.emit('chat_update', {'msg': message}, room=workspace_id)
 
     # Intercept if tagging an agent
@@ -164,8 +169,8 @@ async def disconnect(sid: str) -> None:
 
 # Basic Auth routes to test
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=8, max_length=128)
 
 @app.post("/register")
 def register(user: UserCreate, session: Session = Depends(get_session)) -> dict[str, str]:
@@ -180,7 +185,7 @@ def register(user: UserCreate, session: Session = Depends(get_session)) -> dict[
 
 # Workspaces
 class WorkspaceCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
 
 @app.post("/workspaces")
 def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Workspace:
@@ -204,8 +209,8 @@ def list_agents(session: Session = Depends(get_session), current_user: User = De
 app.mount("/socket.io", socket_app)
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=8, max_length=128)
 
 @app.post("/login")
 def login(req: LoginRequest, session: Session = Depends(get_session)) -> dict[str, str]:
@@ -218,7 +223,7 @@ def login(req: LoginRequest, session: Session = Depends(get_session)) -> dict[st
 
 class ProxyRequest(BaseModel):
     agent_id: uuid.UUID
-    prompt: str
+    prompt: str = Field(..., min_length=1, max_length=5000)
 
 @app.post("/proxy-request")
 async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
