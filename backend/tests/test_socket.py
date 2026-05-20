@@ -59,7 +59,7 @@ async def test_chat_message_mention_agent():
         from app.encryption import encrypt_token
         mock_pool.encrypted_session_token = encrypt_token("mocked_token")
 
-        mock_db.exec.return_value.first.side_effect = [mock_agent, mock_pool]
+        mock_db.exec.return_value.first.return_value = (mock_agent, mock_pool)
 
         mock_call.return_value = "Mock API Response"
 
@@ -83,7 +83,7 @@ async def test_chat_message_mention_agent_offline():
         mock_agent = MagicMock()
         mock_agent.name = "TestAgent"
 
-        mock_db.exec.return_value.first.side_effect = [mock_agent, None] # No token pool entry
+        mock_db.exec.return_value.first.return_value = (mock_agent, None) # No token pool entry
 
         await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello @TestAgent'})
 
@@ -112,7 +112,7 @@ async def test_chat_message_mention_agent_api_error():
         from app.encryption import encrypt_token
         mock_pool.encrypted_session_token = encrypt_token("mocked_token")
 
-        mock_db.exec.return_value.first.side_effect = [mock_agent, mock_pool]
+        mock_db.exec.return_value.first.return_value = (mock_agent, mock_pool)
 
         mock_call.side_effect = Exception("API error")
 
