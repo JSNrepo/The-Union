@@ -1,0 +1,123 @@
+import pytest
+from unittest.mock import AsyncMock, patch, MagicMock
+from app.main import join_workspace, chat_message, sio, call_provider_api, connect, disconnect
+import uuid
+
+@pytest.mark.anyio
+async def test_connect():
+    with patch('builtins.print') as mock_print:
+        await connect('sid1', {})
+        mock_print.assert_called_once_with('Client connected: sid1')
+
+@pytest.mark.anyio
+async def test_disconnect():
+    with patch('builtins.print') as mock_print:
+        await disconnect('sid1')
+        mock_print.assert_called_once_with('Client disconnected: sid1')
+
+@pytest.mark.anyio
+async def test_join_workspace():
+    with patch.object(sio, 'enter_room') as mock_enter, \
+         patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        await join_workspace('sid1', {'workspace_id': 'ws1'})
+        mock_enter.assert_called_once_with('sid1', 'ws1')
+        mock_emit.assert_called_once_with('message', {'msg': 'Someone joined ws1'}, room='ws1')
+
+@pytest.mark.anyio
+async def test_chat_message_basic():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello world'})
+        mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello world'}, room='ws1')
+
+@pytest.mark.anyio
+async def test_chat_message_invalid():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': None})
+        mock_emit.assert_not_called()
+
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'a'*5001})
+        mock_emit.assert_not_called()
+
+@pytest.mark.anyio
+async def test_chat_message_mention_agent():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+
+        # Mock Agent
+        mock_agent = MagicMock()
+        mock_agent.id = uuid.uuid4()
+        mock_agent.name = "TestAgent"
+        mock_agent.provider = "openai"
+
+        # Mock TokenPool
+        mock_pool = MagicMock()
+        from app.encryption import encrypt_token
+        mock_pool.encrypted_session_token = encrypt_token("mocked_token")
+
+        mock_db.exec.return_value.first.side_effect = [mock_agent, mock_pool]
+
+        mock_call.return_value = "Mock API Response"
+
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello @TestAgent'})
+
+        assert mock_emit.call_count == 2
+        mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room='ws1')
+        mock_emit.assert_any_call('chat_update', {'msg': 'Mock API Response'}, room='ws1')
+        mock_call.assert_called_once_with("openai", "mocked_token", "Hello @TestAgent")
+
+@pytest.mark.anyio
+async def test_chat_message_mention_agent_offline():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+
+        # Mock Agent
+        mock_agent = MagicMock()
+        mock_agent.name = "TestAgent"
+
+        mock_db.exec.return_value.first.side_effect = [mock_agent, None] # No token pool entry
+
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello @TestAgent'})
+
+        assert mock_emit.call_count == 2
+        mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room='ws1')
+        mock_emit.assert_any_call('chat_update', {'msg': 'Agent TestAgent is offline (no token available).'}, room='ws1')
+
+@pytest.mark.anyio
+async def test_chat_message_mention_agent_api_error():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+
+        # Mock Agent
+        mock_agent = MagicMock()
+        mock_agent.id = uuid.uuid4()
+        mock_agent.name = "TestAgent"
+        mock_agent.provider = "openai"
+
+        # Mock TokenPool
+        mock_pool = MagicMock()
+        from app.encryption import encrypt_token
+        mock_pool.encrypted_session_token = encrypt_token("mocked_token")
+
+        mock_db.exec.return_value.first.side_effect = [mock_agent, mock_pool]
+
+        mock_call.side_effect = Exception("API error")
+
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello @TestAgent'})
+
+        assert mock_emit.call_count == 2
+        mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room='ws1')
+        mock_emit.assert_any_call('chat_update', {'msg': 'An error occurred while processing your request with TestAgent.'}, room='ws1')
