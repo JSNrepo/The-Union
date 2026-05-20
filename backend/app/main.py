@@ -83,7 +83,13 @@ async def connect(sid: str, environ: dict) -> None:
 
 @sio.event
 async def join_workspace(sid: str, data: dict) -> None:
+    # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
+    if not isinstance(data, dict):
+        return
     workspace_id = data.get('workspace_id')
+    if not isinstance(workspace_id, str) or len(workspace_id) > 100:
+        return
+
     sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
 
@@ -119,10 +125,16 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
 
 @sio.event
 async def chat_message(sid: str, data: dict) -> None:
+    # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
+    if not isinstance(data, dict):
+        return
+
     workspace_id = data.get('workspace_id')
     message = data.get('message')
 
-    # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
+    if not isinstance(workspace_id, str) or len(workspace_id) > 100:
+        return
+
     if not isinstance(message, str) or len(message) > 5000:
         return
 
