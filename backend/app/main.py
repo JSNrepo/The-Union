@@ -57,16 +57,22 @@ def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Se
     if not x_api_key or not hmac.compare_digest(x_api_key.encode('utf-8'), expected_api_key.encode('utf-8')):
         raise HTTPException(status_code=403, detail="Invalid API Key")
 
-    agent = session.exec(select(Agent).where(Agent.id == req.agent_id)).first()
-    if not agent:
+    # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
+    # simultaneously, eliminating the N+1 sequential database queries.
+    result = session.exec(
+        select(Agent, TokenPool)
+        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+        .where(Agent.id == req.agent_id)
+    ).first()
+
+    if not result:
         raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent, pool_entry = result
 
     owner_id = req.owner_id or agent.owner_id
 
     encrypted = encrypt_token(req.token)
-
-    # Update or create token pool entry
-    pool_entry = session.exec(select(TokenPool).where(TokenPool.agent_id == agent.id)).first()
     if pool_entry:
         pool_entry.encrypted_session_token = encrypted
     else:
@@ -245,11 +251,19 @@ class ProxyRequest(BaseModel):
 
 @app.post("/proxy-request")
 async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
-    agent = session.exec(select(Agent).where(Agent.id == req.agent_id)).first()
-    if not agent:
+    # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
+    # simultaneously, eliminating the N+1 sequential database queries.
+    result = session.exec(
+        select(Agent, TokenPool)
+        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+        .where(Agent.id == req.agent_id)
+    ).first()
+
+    if not result:
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    pool_entry = session.exec(select(TokenPool).where(TokenPool.agent_id == agent.id)).first()
+    agent, pool_entry = result
+
     if not pool_entry:
         raise HTTPException(status_code=400, detail="No token available for this agent")
 
