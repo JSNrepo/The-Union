@@ -52,6 +52,30 @@ interface Agent {
 // doesn't trigger a re-render of the entire Home component (and Sidebar).
 const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string) => void, disabled: boolean }) => {
   const [message, setMessage] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus input on '/' key if not already focusing an input
+      if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA" &&
+        !disabled
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+
+      // Blur input on Escape key
+      if (e.key === "Escape" && document.activeElement === inputRef.current) {
+        inputRef.current?.blur();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [disabled]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,15 +86,23 @@ const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative">
+    <form onSubmit={handleSubmit} className="relative flex items-center">
       <Input
+        ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder={disabled ? "Select a workspace to message..." : "Message @agents or team..."}
-        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-12 focus-visible:ring-1 focus-visible:ring-neutral-600"
+        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600"
         disabled={disabled}
         aria-label="Message input"
       />
+      <div className="absolute right-12 flex items-center pointer-events-none">
+        {!disabled && !message && (
+          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500 opacity-100">
+            <span className="text-xs">/</span>
+          </kbd>
+        )}
+      </div>
       <Button
         type="submit"
         size="icon"
