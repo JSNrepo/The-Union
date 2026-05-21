@@ -90,7 +90,7 @@ async def join_workspace(sid: str, data: dict) -> None:
     if not isinstance(workspace_id, str) or len(workspace_id) > 100:
         return
 
-    sio.enter_room(sid, workspace_id)
+    await sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
 
 async def call_provider_api(provider: str, token: str, prompt: str) -> str:
