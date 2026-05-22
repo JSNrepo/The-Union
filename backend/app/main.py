@@ -61,7 +61,7 @@ def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Se
     # simultaneously, eliminating the N+1 sequential database queries.
     result = session.exec(
         select(Agent, TokenPool)
-        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+        .join(TokenPool, isouter=True)
         .where(Agent.id == req.agent_id)
     ).first()
 
@@ -165,7 +165,7 @@ async def chat_message(sid: str, data: dict) -> None:
                     # simultaneously, eliminating the N+1 sequential database queries in the hot path.
                     result = session.exec(
                         select(Agent, TokenPool)
-                        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+                        .join(TokenPool, isouter=True)
                         .where(Agent.name == agent_name)
                     ).first()
                     if result:
@@ -256,7 +256,7 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
     # simultaneously, eliminating the N+1 sequential database queries.
     result = session.exec(
         select(Agent, TokenPool)
-        .join(TokenPool, Agent.id == TokenPool.agent_id, isouter=True)
+        .join(TokenPool, isouter=True)
         .where(Agent.id == req.agent_id)
     ).first()
 
