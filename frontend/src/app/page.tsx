@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Users, Settings, Hash, Bot } from "lucide-react";
+import { MessageSquare, Users, Settings, Hash, Bot, Loader2 } from "lucide-react";
 
 // ⚡ Bolt Optimization: Wrap MessageList in React.memo to prevent unnecessary re-renders
 // of the entire message history on every keystroke in the message input field.
@@ -124,6 +124,7 @@ export default function Home() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
@@ -146,6 +147,8 @@ export default function Home() {
         setAgents(agentData);
       } catch (err) {
         console.error("Error fetching data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -251,7 +254,11 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col" role="log" aria-live="polite">
-          {!activeWorkspace ? (
+          {isLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+              <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+            </div>
+          ) : !activeWorkspace ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                 <Hash className="w-6 h-6 text-neutral-400" />
