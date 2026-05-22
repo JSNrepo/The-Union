@@ -100,7 +100,8 @@ async def join_workspace(sid: str, data: dict) -> None:
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
 
 async def call_provider_api(provider: str, token: str, prompt: str) -> str:
-    async with httpx.AsyncClient(transport=shared_transport) as client:
+    # 🛡️ Sentinel: Add explicit timeout to prevent external API hangs from exhausting resources
+    async with httpx.AsyncClient(transport=shared_transport, timeout=10.0) as client:
         if provider == "openai":
             res = await client.post(
                     "https://chatgpt.com/backend-api/conversation",

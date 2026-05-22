@@ -17,3 +17,7 @@
 **Vulnerability:** The Socket.IO event handlers `join_workspace` and `chat_message` expected a dictionary payload (`data`) and called `.get()` on it, but did not explicitly validate its type. This could lead to an unhandled `AttributeError` exception if a malicious client sent a string or other data type instead of a JSON object.
 **Learning:** In WebSocket frameworks like `python-socketio`, the framework passes the decoded payload directly as received from the client. It does not enforce that the payload matches the type hint (e.g., `data: dict`) provided in the function signature.
 **Prevention:** Always explicitly validate the type of incoming WebSocket payloads (e.g., `if not isinstance(data, dict): return`) before interacting with their attributes to prevent unhandled exceptions and potential service degradation.
+## 2024-05-21 - [Missing Timeout on External API Calls]
+**Vulnerability:** External third-party API calls (to OpenAI, Claude, Gemini) in `call_provider_api` using `httpx.AsyncClient` did not have an explicit timeout configured.
+**Learning:** By default, if a timeout isn't specified, HTTP clients might wait indefinitely. This can lead to connection pool exhaustion and a Denial of Service (DoS) if the external provider experiences hangs or slow responses.
+**Prevention:** Always configure an explicit `timeout` when initializing external network clients (e.g., `httpx.AsyncClient(timeout=10.0)`) to ensure failing fast and maintaining application stability.
