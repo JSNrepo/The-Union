@@ -14,3 +14,7 @@
 **Action:** Always utilize a global, reused HTTP transport instance (e.g., `shared_transport = httpx.AsyncHTTPTransport()`) and pass it to a localized `httpx.AsyncClient(transport=shared_transport)` to benefit from stateless HTTP connection pooling without leaking cookies or other state across users. Handle its lifecycle during app startup/shutdown.## 2024-05-20 - [N+1 Sequential Database Query]
 **Learning:** In the `chat_message` websocket hot path, we were doing sequential queries to fetch the `Agent` and then their `TokenPool`. This means a second database round trip was made right inside the event loop for every message intercept.
 **Action:** Use SQLModel's `.join()` feature with `isouter=True` to fetch both models simultaneously. Instead of fetching an object and then querying for its relation, join them to return a tuple `(Agent, TokenPool)` in a single database round trip.
+
+## 2024-05-22 - [Batched Processing in Websocket Hot Paths]
+**Learning:** Processing multi-entity commands (like mentioning multiple `@agents` in one message) sequentially inside an event loop is an anti-pattern. Sequentially looping through database queries and blocking network requests multiplies the latency by the number of entities mentioned.
+**Action:** Always batch queries for related entities using `Model.field.in_(entity_list)` and execute slow independent external API calls concurrently using `asyncio.gather()` to minimize total request time and database load.

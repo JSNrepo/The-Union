@@ -151,42 +151,45 @@ async def chat_message(sid: str, data: dict) -> None:
     if message and "@" in message:
         # Simple extraction for MVP (e.g. "@Claude")
         words = message.split()
-        for word in words:
-            if word.startswith("@"):
-                agent_name = word[1:]
-                # We need a db session
-                from .database import engine
+        agent_names = list(set([word[1:] for word in words if word.startswith("@")]))
 
-                # ⚡ Bolt Optimization: Extract token and provider inside DB session and close it
-                # immediately to avoid connection pool exhaustion during slow LLM API calls.
-                agent_info = None
-                with Session(engine) as session:
-                    # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
-                    # simultaneously, eliminating the N+1 sequential database queries in the hot path.
-                    result = session.exec(
-                        select(Agent, TokenPool)
-                        .join(TokenPool, isouter=True)
-                        .where(Agent.name == agent_name)
-                    ).first()
-                    if result:
-                        agent, pool_entry = result
-                        if pool_entry:
-                            token = decrypt_token(pool_entry.encrypted_session_token)
-                            agent_info = {"name": agent.name, "provider": agent.provider, "token": token}
-                        else:
-                            agent_info = {"name": agent.name, "offline": True}
+        if not agent_names:
+            return
 
-                if agent_info:
-                    if agent_info.get("offline"):
-                        await sio.emit('chat_update', {'msg': f"Agent {agent_info['name']} is offline (no token available)."}, room=workspace_id)
-                    else:
-                        print(f"Intercepted message for {agent_info['name']}, proxying request...")
-                        try:
-                            ai_response = await call_provider_api(agent_info["provider"], agent_info["token"], message)
-                            await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
-                        except Exception as e:
-                            print(f"Error calling provider for agent {agent_info['name']}: {str(e)}") # Secure logging
-                            await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent_info['name']}."}, room=workspace_id)
+        from .database import engine
+        import asyncio
+
+        # ⚡ Bolt Optimization: Batch DB queries using `in_` and concurrently execute slow LLM API calls
+        # using `asyncio.gather` for multiple mentions, avoiding sequential processing in the event loop.
+        agent_infos = []
+        with Session(engine) as session:
+            results = session.exec(
+                select(Agent, TokenPool)
+                .join(TokenPool, isouter=True)
+                .where(Agent.name.in_(agent_names))
+            ).all()
+
+            for agent, pool_entry in results:
+                if pool_entry:
+                    token = decrypt_token(pool_entry.encrypted_session_token)
+                    agent_infos.append({"name": agent.name, "provider": agent.provider, "token": token, "offline": False})
+                else:
+                    agent_infos.append({"name": agent.name, "offline": True})
+
+        async def handle_agent(agent_info):
+            if agent_info.get("offline"):
+                await sio.emit('chat_update', {'msg': f"Agent {agent_info['name']} is offline (no token available)."}, room=workspace_id)
+            else:
+                print(f"Intercepted message for {agent_info['name']}, proxying request...")
+                try:
+                    ai_response = await call_provider_api(agent_info["provider"], agent_info["token"], message)
+                    await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
+                except Exception as e:
+                    print(f"Error calling provider for agent {agent_info['name']}: {str(e)}") # Secure logging
+                    await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent_info['name']}."}, room=workspace_id)
+
+        if agent_infos:
+            await asyncio.gather(*(handle_agent(info) for info in agent_infos))
 
 @sio.event
 async def disconnect(sid: str) -> None:
