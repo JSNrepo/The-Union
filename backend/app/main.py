@@ -268,6 +268,9 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
 
     agent, pool_entry = result
 
+    if agent.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this agent")
+
     if not pool_entry:
         raise HTTPException(status_code=400, detail="No token available for this agent")
 
