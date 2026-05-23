@@ -8,3 +8,7 @@
 ## 2024-05-22 - Prevent UI Flicker During Hydration
 **Learning:** During initial data fetching (hydration) when auto-selecting an active item (like a workspace), rendering a generic empty state (like "No workspace selected") before the fetch completes causes a jarring UI flicker.
 **Action:** Always introduce an `isLoading` state for initial asynchronous data loads and render a visually distinct loading indicator (e.g., a spinner) to mask the hydration delay, only rendering the empty state or the content once the fetch definitively resolves.
+
+## 2026-05-23 - Prevent layout shifts with skeleton loaders
+**Learning:** Relying purely on empty arrays during data hydration causes a visually jarring layout shift and misleading empty states. Furthermore, using `role="status"` on a generic `div` inside a button is an accessibility anti-pattern that can suppress screen reader announcements.
+**Action:** Always implement explicit `isLoading` checks to render localized skeleton placeholders (e.g., using `animate-pulse`) and use `<span className="sr-only">` for hidden status text.
