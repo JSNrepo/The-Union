@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +50,7 @@ interface Agent {
 
 // ⚡ Bolt Optimization: Extract MessageInput to its own component so that typing
 // doesn't trigger a re-render of the entire Home component (and Sidebar).
-const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string) => void, disabled: boolean }) => {
+const MessageInput = React.memo(({ onSendMessage, disabled }: { onSendMessage: (msg: string) => void, disabled: boolean }) => {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +116,8 @@ const MessageInput = ({ onSendMessage, disabled }: { onSendMessage: (msg: string
       </Button>
     </form>
   );
-};
+});
+MessageInput.displayName = 'MessageInput';
 
 export default function Home() {
   const socketRef = useRef<Socket | null>(null);
@@ -183,15 +184,18 @@ export default function Home() {
     };
   }, [apiUrl, activeWorkspace, activeWorkspace?.id]);
 
-  const handleSendMessage = (msg: string) => {
+  // ⚡ Bolt Optimization: Wrap event handler in useCallback so its reference remains stable.
+  // This prevents the memoized MessageInput from re-rendering needlessly.
+  const handleSendMessage = useCallback((msg: string) => {
     if (socketRef.current && activeWorkspace) {
       socketRef.current.emit("chat_message", { workspace_id: activeWorkspace.id, message: msg });
     }
-  };
+  }, [activeWorkspace]);
 
-  return (
-    <div className="flex h-screen bg-neutral-900 text-white font-sans">
-      {/* Sidebar */}
+  // ⚡ Bolt Optimization: Memoize the Sidebar to prevent its expensive loops (workspaces.map and agents.map)
+  // from re-evaluating every time a new chat message arrives (which updates `messages` state and triggers Home re-render).
+  const sidebarContent = useMemo(() => {
+    return (
       <div className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col">
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
@@ -260,6 +264,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+    );
+  }, [isLoading, workspaces, agents, activeWorkspace?.id]);
+
+  return (
+    <div className="flex h-screen bg-neutral-900 text-white font-sans">
+      {/* Sidebar */}
+      {sidebarContent}
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-neutral-900">
