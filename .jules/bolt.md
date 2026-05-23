@@ -18,3 +18,7 @@
 ## 2024-05-22 - [Batched Processing in Websocket Hot Paths]
 **Learning:** Processing multi-entity commands (like mentioning multiple `@agents` in one message) sequentially inside an event loop is an anti-pattern. Sequentially looping through database queries and blocking network requests multiplies the latency by the number of entities mentioned.
 **Action:** Always batch queries for related entities using `Model.field.in_(entity_list)` and execute slow independent external API calls concurrently using `asyncio.gather()` to minimize total request time and database load.
+
+## 2024-05-23 - [React Memoization for Dynamic Views]
+**Learning:** Frequent state updates (like appending to a `messages` array via websockets) cause the entire parent component to re-render. If the parent contains complex iterables (like sidebars mapping over `workspaces` and `agents`), these lists are needlessly re-evaluated on every incoming message.
+**Action:** Use `useMemo` to memoize expensive JSX blocks (like sidebars) and `useCallback` coupled with `React.memo` to stabilize event handlers passed to child components.
