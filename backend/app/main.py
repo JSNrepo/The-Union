@@ -218,6 +218,7 @@ class WorkspaceCreate(BaseModel):
 @app.post("/workspaces")
 def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Workspace:
     ws = Workspace(name=req.name)
+    ws.members.append(current_user)
     session.add(ws)
     session.commit()
     session.refresh(ws)
@@ -225,12 +226,18 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
 
 @app.get("/workspaces")
 def list_workspaces(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Workspace]:
-    workspaces = session.exec(select(Workspace)).all()
+    # 🛡️ Sentinel: Fix authorization bypass to only return user's workspaces
+    workspaces = session.exec(
+        select(Workspace)
+        .join(UserWorkspaceLink)
+        .where(UserWorkspaceLink.user_id == current_user.id)
+    ).all()
     return list(workspaces)
 
 @app.get("/agents")
 def list_agents(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Agent]:
-    agents = session.exec(select(Agent)).all()
+    # 🛡️ Sentinel: Fix authorization bypass to only return user's agents
+    agents = session.exec(select(Agent).where(Agent.owner_id == current_user.id)).all()
     return list(agents)
 
 # Mount socket app
