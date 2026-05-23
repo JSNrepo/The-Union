@@ -31,6 +31,12 @@ def test_register(client: TestClient):
     assert response.status_code == 200
     assert response.json() == {"msg": "User created"}
 
+def test_register_duplicate_username(client: TestClient):
+    client.post("/register", json={"username": "dupuser", "password": "password"})
+    response = client.post("/register", json={"username": "dupuser", "password": "password"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Username already registered"}
+
 def test_login_success(client: TestClient):
     client.post("/register", json={"username": "loginuser", "password": "password"})
     response = client.post("/login", json={"username": "loginuser", "password": "password"})
