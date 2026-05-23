@@ -204,7 +204,14 @@ export default function Home() {
           <div className="px-4 mb-6">
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Workspaces</h2>
             <div className="space-y-1">
-              {workspaces.map((ws) => (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-8 bg-neutral-800/50 rounded-md animate-pulse"></div>
+                ))
+              ) : workspaces.length === 0 ? (
+                <div className="text-sm text-neutral-500 px-2 py-1.5">No workspaces found</div>
+              ) : (
+                workspaces.map((ws) => (
                 <button
                   key={ws.id}
                   onClick={() => setActiveWorkspace(ws)}
@@ -218,14 +225,22 @@ export default function Home() {
                   <Hash className="w-4 h-4 shrink-0" />
                   <span className="truncate">{ws.name}</span>
                 </button>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           <div className="px-4">
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">AI Pool</h2>
             <div className="space-y-2">
-              {agents.map((agent) => (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-9 bg-neutral-800/50 rounded-md animate-pulse"></div>
+                ))
+              ) : agents.length === 0 ? (
+                <div className="text-sm text-neutral-500 px-2 py-1.5">No agents available</div>
+              ) : (
+                agents.map((agent) => (
                 <button
                   key={agent.id}
                   className="flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600"
@@ -236,9 +251,11 @@ export default function Home() {
                     </div>
                     <span className="text-sm">{agent.name}</span>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-green-500" role="status" aria-label="Online"></div>
+                  <span className="sr-only">Online</span>
+                  <div aria-hidden="true" className="w-2 h-2 rounded-full bg-green-500"></div>
                 </button>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -257,6 +274,7 @@ export default function Home() {
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+              <span className="sr-only">Loading workspace data...</span>
             </div>
           ) : !activeWorkspace ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
