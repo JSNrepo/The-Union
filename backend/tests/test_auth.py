@@ -1,8 +1,12 @@
 import os
 import pytest
 import jwt
+import uuid
 from datetime import datetime, timezone, timedelta
-from app.auth import get_password_hash, verify_password, create_access_token, ALGORITHM
+from fastapi import HTTPException, status
+from unittest.mock import MagicMock
+from app.auth import get_password_hash, verify_password, create_access_token, ALGORITHM, get_current_user
+from app.models import User
 
 def test_password_hashing():
     password = "supersecretpassword123"
@@ -22,6 +26,49 @@ def test_create_access_token():
 
     assert decoded.get("sub") == "testuser"
     assert "exp" in decoded
+
+def test_get_current_user_invalid_token():
+    mock_session = MagicMock()
+    with pytest.raises(HTTPException) as exc_info:
+        get_current_user("invalid.token.string", session=mock_session)
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc_info.value.detail == "Could not validate credentials"
+    assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
+
+def test_get_current_user_missing_sub():
+    # Token without 'sub' claim
+    data = {"other": "data"}
+    token = create_access_token(data)
+    mock_session = MagicMock()
+    with pytest.raises(HTTPException) as exc_info:
+        get_current_user(token, session=mock_session)
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc_info.value.detail == "Could not validate credentials"
+
+def test_get_current_user_not_found():
+    user_id = str(uuid.uuid4())
+    token = create_access_token({"sub": user_id})
+    mock_session = MagicMock()
+    mock_session.get.return_value = None  # Simulate user not found
+
+    with pytest.raises(HTTPException) as exc_info:
+        get_current_user(token, session=mock_session)
+
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc_info.value.detail == "Could not validate credentials"
+
+def test_get_current_user_success():
+    user_id = str(uuid.uuid4())
+    token = create_access_token({"sub": user_id})
+
+    mock_user = User(id=uuid.UUID(user_id), username="testuser", hashed_password="hashedpassword")
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_user
+
+    user = get_current_user(token, session=mock_session)
+
+    assert user == mock_user
+    mock_session.get.assert_called_once_with(User, uuid.UUID(user_id))
 
 def test_create_access_token_with_expiry():
     data = {"sub": "testuser"}
