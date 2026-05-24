@@ -68,8 +68,5 @@ When multiple humans tag an agent with conflicting prompts simultaneously, the s
 
 ## Demo & Screenshots
 
-### App Screenshot
-![Screenshot](assets/screenshot.png)
-
-### App Demo
-<video controls src="assets/demo.webm"></video>
+### App Demo (Click to play)
+[![App Screenshot](assets/screenshot.png)](assets/demo.webm)
