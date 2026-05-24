@@ -22,3 +22,7 @@
 ## 2024-05-23 - [React Memoization for Dynamic Views]
 **Learning:** Frequent state updates (like appending to a `messages` array via websockets) cause the entire parent component to re-render. If the parent contains complex iterables (like sidebars mapping over `workspaces` and `agents`), these lists are needlessly re-evaluated on every incoming message.
 **Action:** Use `useMemo` to memoize expensive JSX blocks (like sidebars) and `useCallback` coupled with `React.memo` to stabilize event handlers passed to child components.
+
+## 2024-05-24 - [DB connection pool exhaustion during external API calls in endpoints]
+**Learning:** Holding an open database session during slow network requests (like long-running LLM API calls) inside FastAPI endpoints can quickly exhaust the database connection pool under load, creating a severe performance bottleneck and potential crashes.
+**Action:** Always fetch required database objects, eagerly extract the specific data points needed, and immediately close the DB session before making external async network calls.
