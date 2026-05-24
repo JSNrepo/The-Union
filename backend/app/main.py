@@ -282,12 +282,18 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
         raise HTTPException(status_code=400, detail="No token available for this agent")
 
     token = decrypt_token(pool_entry.encrypted_session_token)
+    provider = agent.provider
+    agent_id = agent.id
 
-    print(f"Proxying request to {agent.provider} using token: {token[:10]}...")
+    # ⚡ Bolt Optimization: Eagerly extract required data and close the DB session before
+    # making the slow external API call to prevent connection pool exhaustion.
+    session.close()
+
+    print(f"Proxying request to {provider} using token: {token[:10]}...")
 
     try:
-        response_text = await call_provider_api(agent.provider, token, req.prompt)
+        response_text = await call_provider_api(provider, token, req.prompt)
         return {"response": response_text}
     except Exception as e:
-        print(f"Proxy request error for agent {agent.id}: {str(e)}") # Secure logging
+        print(f"Proxy request error for agent {agent_id}: {str(e)}") # Secure logging
         raise HTTPException(status_code=500, detail="An internal error occurred while communicating with the AI provider.")
