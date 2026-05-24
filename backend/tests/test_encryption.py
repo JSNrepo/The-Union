@@ -24,3 +24,20 @@ def test_encryption_key_generation():
     # Make sure the key generation is deterministic
     assert key1 == key2
     assert len(key1) > 0
+
+import os
+from unittest.mock import patch
+import uuid
+
+def test_get_encryption_key_missing_master_key():
+    with patch.dict(os.environ, clear=True):
+        if "UNION_MASTER_KEY" in os.environ:
+            del os.environ["UNION_MASTER_KEY"]
+        with pytest.raises(RuntimeError, match="UNION_MASTER_KEY environment variable is not set"):
+            get_encryption_key()
+
+def test_get_encryption_key_fallback_salt():
+    with patch("uuid.getnode", side_effect=Exception("Mocked exception")), \
+         patch.dict(os.environ, {"UNION_MASTER_KEY": "123", "UNION_FALLBACK_SALT": "test-fallback-salt"}):
+        key = get_encryption_key()
+        assert len(key) > 0
