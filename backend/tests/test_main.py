@@ -202,6 +202,40 @@ def test_proxy_request(client: TestClient):
     assert response.status_code == 404
     assert response.json() == {"detail": "Agent not found"}
 
+def test_proxy_request_unauthorized(client: TestClient):
+    # Register two users
+    client.post("/register", json={"username": "proxyuser_unauth1", "password": "password"})
+    client.post("/register", json={"username": "proxyuser_unauth2", "password": "password"})
+
+    # Login as user 2
+    login_response = client.post("/login", json={"username": "proxyuser_unauth2", "password": "password"})
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    from app.main import get_session
+    from app.models import Agent, User, TokenPool
+    from app.encryption import encrypt_token
+    from sqlmodel import select
+
+    with next(get_session_override()) as session:
+        # Get user 1
+        user1 = session.exec(select(User).where(User.username == "proxyuser_unauth1")).first()
+
+        # Create an agent owned by user 1
+        agent_id = uuid.uuid4()
+        agent = Agent(id=agent_id, name="UnauthAgent", owner_id=user1.id, provider="openai")
+        session.add(agent)
+
+        # Add a token pool entry
+        pool_entry = TokenPool(agent_id=agent.id, owner_user_id=user1.id, encrypted_session_token=encrypt_token("mocked_token"))
+        session.add(pool_entry)
+        session.commit()
+
+    # User 2 tries to proxy request to User 1's agent
+    response = client.post("/proxy-request", json={"agent_id": str(agent_id), "prompt": "Hello!"}, headers=headers)
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Not authorized to access this agent"}
+
 def test_proxy_request_no_token(client: TestClient):
     client.post("/register", json={"username": "proxynotoken", "password": "password"})
     login_response = client.post("/login", json={"username": "proxynotoken", "password": "password"})
