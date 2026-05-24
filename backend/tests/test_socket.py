@@ -121,3 +121,49 @@ async def test_chat_message_mention_agent_api_error():
         assert mock_emit.call_count == 2
         mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room='ws1')
         mock_emit.assert_any_call('chat_update', {'msg': 'An error occurred while processing your request with TestAgent.'}, room='ws1')
+
+@pytest.mark.anyio
+async def test_join_workspace_invalid():
+    with patch.object(sio, 'enter_room') as mock_enter, \
+         patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+
+        # Test invalid data type
+        await join_workspace('sid1', 'not a dict')
+        mock_enter.assert_not_called()
+
+        # Test missing workspace_id
+        await join_workspace('sid1', {})
+        mock_enter.assert_not_called()
+
+        # Test workspace_id too long
+        await join_workspace('sid1', {'workspace_id': 'a'*101})
+        mock_enter.assert_not_called()
+
+@pytest.mark.anyio
+async def test_chat_message_invalid_data():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        # Test invalid data type
+        await chat_message('sid1', 'not a dict')
+        mock_emit.assert_not_called()
+
+        # Test invalid workspace_id type
+        await chat_message('sid1', {'workspace_id': 123, 'message': 'Hello'})
+        mock_emit.assert_not_called()
+
+        # Test workspace_id too long
+        await chat_message('sid1', {'workspace_id': 'a'*101, 'message': 'Hello'})
+        mock_emit.assert_not_called()
+
+@pytest.mark.anyio
+async def test_chat_message_mention_without_valid_agents():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call:
+
+        # Test string with just "@" but no agent name attached
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'Hello @ everyone'})
+
+        # chat_update is emitted for the original message
+        mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello @ everyone'}, room='ws1')
+
+        # But call_provider_api is not called because no valid agent names extracted
+        mock_call.assert_not_called()
