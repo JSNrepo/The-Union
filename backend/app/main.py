@@ -161,22 +161,26 @@ async def chat_message(sid: str, data: dict) -> None:
         from .database import engine
         import asyncio
 
-        # ⚡ Bolt Optimization: Batch DB queries using `in_` and concurrently execute slow LLM API calls
-        # using `asyncio.gather` for multiple mentions, avoiding sequential processing in the event loop.
-        agent_infos = []
-        with Session(engine) as session:
-            results = session.exec(
-                select(Agent, TokenPool)
-                .join(TokenPool, isouter=True)
-                .where(col(Agent.name).in_(agent_names))
-            ).all()
+        # ⚡ Bolt Optimization: Move synchronous database operations and CPU-bound decryption
+        # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
+        def fetch_agent_infos():
+            infos = []
+            with Session(engine) as session:
+                results = session.exec(
+                    select(Agent, TokenPool)
+                    .join(TokenPool, isouter=True)
+                    .where(col(Agent.name).in_(agent_names))
+                ).all()
 
-            for agent, pool_entry in results:
-                if pool_entry:
-                    token = decrypt_token(pool_entry.encrypted_session_token)
-                    agent_infos.append({"name": agent.name, "provider": agent.provider, "token": token, "offline": False})
-                else:
-                    agent_infos.append({"name": agent.name, "offline": True})
+                for agent, pool_entry in results:
+                    if pool_entry:
+                        token = decrypt_token(pool_entry.encrypted_session_token)
+                        infos.append({"name": agent.name, "provider": agent.provider, "token": token, "offline": False})
+                    else:
+                        infos.append({"name": agent.name, "offline": True})
+            return infos
+
+        agent_infos = await asyncio.to_thread(fetch_agent_infos)
 
         async def handle_agent(agent_info):
             if agent_info.get("offline"):

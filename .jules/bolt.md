@@ -26,3 +26,6 @@
 ## 2024-05-24 - [DB connection pool exhaustion during external API calls in endpoints]
 **Learning:** Holding an open database session during slow network requests (like long-running LLM API calls) inside FastAPI endpoints can quickly exhaust the database connection pool under load, creating a severe performance bottleneck and potential crashes.
 **Action:** Always fetch required database objects, eagerly extract the specific data points needed, and immediately close the DB session before making external async network calls.
+## 2024-05-25 - [Async Event Loop Blocking by Synchronous DB calls]
+**Learning:** In the `chat_message` websocket event handler, running synchronous database queries (`session.exec`) and CPU-intensive operations (like `decrypt_token`) directly in the `async def` function blocks the entire ASGI event loop. This degrades concurrency for all connected websocket clients.
+**Action:** Move synchronous database operations and CPU-bound work inside an `async def` function to a separate thread using `asyncio.to_thread`. Always ensure the database `Session` is created inside the newly spawned thread and that you eagerly extract data into standard Python structures (like dicts/lists) before returning to avoid `DetachedInstanceError`.
