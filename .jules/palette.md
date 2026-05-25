@@ -12,3 +12,7 @@
 ## 2026-05-23 - Prevent layout shifts with skeleton loaders
 **Learning:** Relying purely on empty arrays during data hydration causes a visually jarring layout shift and misleading empty states. Furthermore, using `role="status"` on a generic `div` inside a button is an accessibility anti-pattern that can suppress screen reader announcements.
 **Action:** Always implement explicit `isLoading` checks to render localized skeleton placeholders (e.g., using `animate-pulse`) and use `<span className="sr-only">` for hidden status text.
+
+## 2024-05-25 - Semantic HTML Landmarks in SPAs
+**Learning:** Using generic `<div>` containers for major layout regions (like sidebars and main content areas) makes screen reader navigation difficult in Single Page Applications. Users lack context about where they are in the page structure.
+**Action:** Always use semantic HTML5 landmarks (e.g., `<aside>`, `<main>`, `<nav>`) with descriptive `aria-label` attributes for primary application layout sections to ensure proper screen reader announcements and navigation.
