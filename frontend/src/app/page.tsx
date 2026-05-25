@@ -196,10 +196,10 @@ export default function Home() {
   // from re-evaluating every time a new chat message arrives (which updates `messages` state and triggers Home re-render).
   const sidebarContent = useMemo(() => {
     return (
-      <div className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col">
+      <aside className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col" aria-label="Sidebar navigation">
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
-          <button aria-label="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md">
+          <button aria-label="Settings" title="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md">
             <Settings className="w-5 h-5 cursor-pointer" />
           </button>
         </div>
@@ -263,7 +263,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </aside>
     );
   }, [isLoading, workspaces, agents, activeWorkspace?.id]);
 
@@ -273,7 +273,7 @@ export default function Home() {
       {sidebarContent}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-neutral-900">
+      <main className="flex-1 flex flex-col bg-neutral-900" aria-label="Main chat area">
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
           <h2 className="font-semibold flex items-center gap-2">
             <Hash className="w-5 h-5 text-neutral-400" />
@@ -315,7 +315,7 @@ export default function Home() {
         <div className="p-4 px-6 pb-6">
           <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} />
         </div>
-      </div>
+      </main>
     </div>
   );
 }
