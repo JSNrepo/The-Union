@@ -10,9 +10,10 @@ import uuid
 from .database import get_session
 from .models import User
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
+_SECRET_KEY = os.getenv("SECRET_KEY")
+if not _SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is not set")
+SECRET_KEY: str = _SECRET_KEY
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

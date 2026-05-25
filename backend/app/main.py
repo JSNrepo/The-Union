@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
-from sqlmodel import Session, select
+from contextlib import asynccontextmanager
+from sqlmodel import Session, select, col
 from .database import create_db_and_tables, get_session
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
 from .auth import get_password_hash, verify_password, create_access_token, get_current_user
@@ -11,7 +12,14 @@ import os
 import uuid
 import httpx
 
-app = FastAPI(title="The Union")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+    await shared_transport.aclose()
+
+app = FastAPI(title="The Union", lifespan=lifespan)
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 
@@ -30,13 +38,7 @@ socket_app = socketio.ASGIApp(sio, socketio_path="")
 # safely across requests without sharing stateful data like cookies.
 shared_transport = httpx.AsyncHTTPTransport()
 
-@app.on_event("startup")
-def on_startup() -> None:
-    create_db_and_tables()
 
-@app.on_event("shutdown")
-async def on_shutdown() -> None:
-    await shared_transport.aclose()
 
 # Sync endpoint for Chrome Extension
 class SyncTokenRequest(BaseModel):
@@ -166,7 +168,7 @@ async def chat_message(sid: str, data: dict) -> None:
             results = session.exec(
                 select(Agent, TokenPool)
                 .join(TokenPool, isouter=True)
-                .where(Agent.name.in_(agent_names))
+                .where(col(Agent.name).in_(agent_names))
             ).all()
 
             for agent, pool_entry in results:
