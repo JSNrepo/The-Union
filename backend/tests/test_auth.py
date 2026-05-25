@@ -102,3 +102,13 @@ def test_auth_missing_secret_key():
 
     # Reload again to restore module state for subsequent tests
     importlib.reload(app.auth)
+
+def test_get_current_user_invalid_uuid_format():
+    # Token with an invalid UUID string
+    data = {"sub": "invalid-uuid-string"}
+    token = create_access_token(data)
+    mock_session = MagicMock()
+    with pytest.raises(HTTPException) as exc_info:
+        get_current_user(token, session=mock_session)
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc_info.value.detail == "Could not validate credentials"

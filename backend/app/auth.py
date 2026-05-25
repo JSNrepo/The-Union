@@ -50,7 +50,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
-    user = session.get(User, uuid.UUID(user_id))
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise credentials_exception
+    user = session.get(User, user_uuid)
     if user is None:
         raise credentials_exception
     return user
