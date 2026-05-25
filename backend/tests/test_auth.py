@@ -80,3 +80,25 @@ def test_create_access_token_with_expiry():
 
     assert decoded.get("sub") == "testuser"
     assert "exp" in decoded
+
+def test_auth_missing_secret_key():
+    import importlib
+    import os
+    import app.auth
+
+    # Temporarily remove SECRET_KEY
+    original_secret = os.getenv("SECRET_KEY")
+    if "SECRET_KEY" in os.environ:
+        del os.environ["SECRET_KEY"]
+
+    with pytest.raises(RuntimeError) as exc_info:
+        importlib.reload(app.auth)
+
+    assert "SECRET_KEY environment variable is not set" in str(exc_info.value)
+
+    # Restore SECRET_KEY
+    if original_secret is not None:
+        os.environ["SECRET_KEY"] = original_secret
+
+    # Reload again to restore module state for subsequent tests
+    importlib.reload(app.auth)
