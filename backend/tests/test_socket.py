@@ -167,3 +167,9 @@ async def test_chat_message_mention_without_valid_agents():
 
         # But call_provider_api is not called because no valid agent names extracted
         mock_call.assert_not_called()
+
+@pytest.mark.anyio
+async def test_chat_message_mention_agent_no_names_empty():
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        await chat_message('sid1', {'workspace_id': 'ws1', 'message': 'hello@world'})
+        mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room='ws1')

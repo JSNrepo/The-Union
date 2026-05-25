@@ -282,3 +282,18 @@ def test_proxy_request_api_error(client: TestClient):
         response = client.post("/proxy-request", json={"agent_id": str(agent_id), "prompt": "Hello!"}, headers=headers)
         assert response.status_code == 500
         assert response.json() == {"detail": "An internal error occurred while communicating with the AI provider."}
+
+def test_sync_token_missing_api_key_env(client: TestClient):
+    with patch("os.getenv", return_value=None):
+        response = client.post(
+            "/sync-token",
+            json={
+                "provider": "openai",
+                "token": "sk-123",
+                "agent_id": str(uuid.uuid4()),
+                "owner_id": str(uuid.uuid4())
+            },
+            headers={"x-api-key": "some-key"}
+        )
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Server configuration error"
