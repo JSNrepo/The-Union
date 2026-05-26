@@ -128,7 +128,7 @@ async def test_join_workspace_invalid():
          patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
 
         # Test invalid data type
-        await join_workspace('sid1', 'not a dict')
+        await join_workspace('sid1', 'not a dict') # type: ignore
         mock_enter.assert_not_called()
 
         # Test missing workspace_id
@@ -143,7 +143,7 @@ async def test_join_workspace_invalid():
 async def test_chat_message_invalid_data():
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
         # Test invalid data type
-        await chat_message('sid1', 'not a dict')
+        await chat_message('sid1', 'not a dict') # type: ignore
         mock_emit.assert_not_called()
 
         # Test invalid workspace_id type

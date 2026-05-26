@@ -22,6 +22,7 @@ def test_create_access_token():
 
     # decode the token to verify its contents
     secret_key = os.getenv("SECRET_KEY")
+    assert secret_key is not None
     decoded = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
 
     assert decoded.get("sub") == "testuser"
@@ -76,6 +77,7 @@ def test_create_access_token_with_expiry():
     token = create_access_token(data, expires_delta=expires_delta)
 
     secret_key = os.getenv("SECRET_KEY")
+    assert secret_key is not None
     decoded = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
 
     assert decoded.get("sub") == "testuser"
