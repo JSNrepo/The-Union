@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import socketio
 import os
+import asyncio
 import uuid
 import httpx
 
@@ -268,28 +269,42 @@ class ProxyRequest(BaseModel):
 
 @app.post("/proxy-request")
 async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
-    # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
-    # simultaneously, eliminating the N+1 sequential database queries.
-    result = session.exec(
-        select(Agent, TokenPool)
-        .join(TokenPool, isouter=True)
-        .where(Agent.id == req.agent_id)
-    ).first()
+    # ⚡ Bolt Optimization: Move synchronous database operations and CPU-bound decryption
+    # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
+    def fetch_agent_data():
+        # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
+        # simultaneously, eliminating the N+1 sequential database queries.
+        result = session.exec(
+            select(Agent, TokenPool)
+            .join(TokenPool, isouter=True)
+            .where(Agent.id == req.agent_id)
+        ).first()
 
-    if not result:
-        raise HTTPException(status_code=404, detail="Agent not found")
+        if not result:
+            raise HTTPException(status_code=404, detail="Agent not found")
 
-    agent, pool_entry = result
+        agent, pool_entry = result
 
-    if agent.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to access this agent")
+        if agent.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this agent")
 
-    if not pool_entry:
-        raise HTTPException(status_code=400, detail="No token available for this agent")
+        if not pool_entry:
+            raise HTTPException(status_code=400, detail="No token available for this agent")
 
-    token = decrypt_token(pool_entry.encrypted_session_token)
-    provider = agent.provider
-    agent_id = agent.id
+        token = decrypt_token(pool_entry.encrypted_session_token)
+
+        # Eagerly extract required data
+        return {
+            "token": token,
+            "provider": agent.provider,
+            "agent_id": agent.id
+        }
+
+    agent_data = await asyncio.to_thread(fetch_agent_data)
+
+    token = agent_data["token"]
+    provider = agent_data["provider"]
+    agent_id = agent_data["agent_id"]
 
     # ⚡ Bolt Optimization: Eagerly extract required data and close the DB session before
     # making the slow external API call to prevent connection pool exhaustion.
