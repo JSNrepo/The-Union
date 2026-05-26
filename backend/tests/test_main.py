@@ -93,13 +93,16 @@ def test_sync_token(client: TestClient):
 
     with next(get_session_override()) as session:
         user = session.exec(select(User).where(User.username == "syncuser")).first()
+        assert user is not None
         user_id = user.id
         agent_id = uuid.uuid4()
         agent = Agent(id=agent_id, name="TestAgent", owner_id=user_id, provider="openai")
         session.add(agent)
         session.commit()
 
-    sync_headers = {"x-api-key": os.getenv("EXTENSION_API_KEY")}
+    ext_api_key = os.getenv("EXTENSION_API_KEY")
+    assert ext_api_key is not None
+    sync_headers = {"x-api-key": ext_api_key}
     sync_data = {
         "provider": "openai",
         "token": "my-secret-token",
@@ -128,7 +131,9 @@ def test_sync_token_invalid_api_key(client: TestClient):
     assert response.json() == {"detail": "Invalid API Key"}
 
 def test_sync_token_agent_not_found(client: TestClient):
-    sync_headers = {"x-api-key": os.getenv("EXTENSION_API_KEY")}
+    ext_api_key = os.getenv("EXTENSION_API_KEY")
+    assert ext_api_key is not None
+    sync_headers = {"x-api-key": ext_api_key}
     sync_data = {
         "provider": "openai",
         "token": "my-secret-token",
@@ -151,6 +156,7 @@ def test_list_agents(client: TestClient):
 
     with next(get_session_override()) as session:
         user = session.exec(select(User).where(User.username == "agentuser")).first()
+        assert user is not None
         agent_id = uuid.uuid4()
         agent = Agent(id=agent_id, name="TestAgent2", owner_id=user.id, provider="openai")
         session.add(agent)
@@ -177,6 +183,7 @@ def test_proxy_request(client: TestClient):
 
     with next(get_session_override()) as session:
         user = session.exec(select(User).where(User.username == "proxyuser")).first()
+        assert user is not None
         agent_id = uuid.uuid4()
         agent = Agent(id=agent_id, name="ProxyTestAgent", owner_id=user.id, provider="openai")
         session.add(agent)
@@ -220,6 +227,7 @@ def test_proxy_request_unauthorized(client: TestClient):
     with next(get_session_override()) as session:
         # Get user 1
         user1 = session.exec(select(User).where(User.username == "proxyuser_unauth1")).first()
+        assert user1 is not None
 
         # Create an agent owned by user 1
         agent_id = uuid.uuid4()
@@ -248,6 +256,7 @@ def test_proxy_request_no_token(client: TestClient):
 
     with next(get_session_override()) as session:
         user = session.exec(select(User).where(User.username == "proxynotoken")).first()
+        assert user is not None
         agent_id = uuid.uuid4()
         agent = Agent(id=agent_id, name="NoTokenAgent", owner_id=user.id, provider="openai")
         session.add(agent)
@@ -270,6 +279,7 @@ def test_proxy_request_api_error(client: TestClient):
 
     with next(get_session_override()) as session:
         user = session.exec(select(User).where(User.username == "proxyuser2")).first()
+        assert user is not None
         agent = Agent(id=uuid.uuid4(), name="ProxyTestAgent2", owner_id=user.id, provider="openai")
         session.add(agent)
         pool_entry = TokenPool(agent_id=agent.id, owner_user_id=user.id, encrypted_session_token=encrypt_token("mocked_token"))
