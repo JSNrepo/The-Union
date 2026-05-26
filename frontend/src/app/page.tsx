@@ -138,14 +138,21 @@ export default function Home() {
           fetch(`${apiUrl}/agents`)
         ]);
 
-        const wsData: Workspace[] = await wsRes.json();
-        const agentData: Agent[] = await agentRes.json();
-
-        setWorkspaces(wsData);
-        if (wsData.length > 0) {
-          setActiveWorkspace(wsData[0]);
+        if (!wsRes.ok || !agentRes.ok) {
+          throw new Error("Failed to fetch data from API");
         }
-        setAgents(agentData);
+
+        const wsData: any = await wsRes.json();
+        const agentData: any = await agentRes.json();
+
+        const workspacesList = Array.isArray(wsData) ? wsData : [];
+        const agentsList = Array.isArray(agentData) ? agentData : [];
+
+        setWorkspaces(workspacesList);
+        if (workspacesList.length > 0) {
+          setActiveWorkspace(workspacesList[0]);
+        }
+        setAgents(agentsList);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
