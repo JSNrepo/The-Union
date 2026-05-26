@@ -142,11 +142,11 @@ export default function Home() {
           throw new Error("Failed to fetch data from API");
         }
 
-        const wsData: any = await wsRes.json();
-        const agentData: any = await agentRes.json();
+        const wsData: unknown = await wsRes.json();
+        const agentData: unknown = await agentRes.json();
 
-        const workspacesList = Array.isArray(wsData) ? wsData : [];
-        const agentsList = Array.isArray(agentData) ? agentData : [];
+        const workspacesList = (Array.isArray(wsData) ? wsData : []) as Workspace[];
+        const agentsList = (Array.isArray(agentData) ? agentData : []) as Agent[];
 
         setWorkspaces(workspacesList);
         if (workspacesList.length > 0) {
