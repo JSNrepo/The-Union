@@ -22,7 +22,8 @@ class Agent(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     # ⚡ Bolt Optimization: Add index to name field as it is queried frequently during chat interception
     name: str = Field(index=True)
-    owner_id: uuid.UUID = Field(foreign_key="user.id")
+    # ⚡ Bolt Optimization: Add index to owner_id to prevent full table scans when listing a user's agents
+    owner_id: uuid.UUID = Field(foreign_key="user.id", index=True)
     owner: User = Relationship(back_populates="agents")
     workspace_id: Optional[uuid.UUID] = Field(default=None, foreign_key="workspace.id")
     provider: str # e.g. claude, gemini
