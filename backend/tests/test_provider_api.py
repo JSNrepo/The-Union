@@ -54,3 +54,15 @@ async def test_call_provider_api_gemini():
 async def test_call_provider_api_unsupported():
     with pytest.raises(Exception, match="Unsupported provider"):
         await call_provider_api('unknown', 'token', 'Hello')
+
+@pytest.mark.anyio
+async def test_call_provider_api_http_error():
+    with patch('app.main.httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
+        mock_response = MagicMock()
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("500 Internal Server Error", request=MagicMock(), response=MagicMock())
+        mock_post.return_value = mock_response
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await call_provider_api('openai', 'token123', 'Hello')
+
+        mock_post.assert_called_once()
