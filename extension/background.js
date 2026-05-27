@@ -15,6 +15,11 @@ async function syncToken(provider, token, agentId, apiKey) {
         agent_id: agentId
       })
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     console.log(`Synced ${provider} token:`, await response.json());
   } catch (error) {
     console.error(`Failed to sync ${provider} token:`, error);
