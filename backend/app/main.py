@@ -115,6 +115,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
                         "model": "text-davinci-002-render-sha"
                     }
                 )
+            res.raise_for_status()
             return f"OpenAI: {res.text[:100]}..."
         elif provider == "claude":
             res = await client.post(
@@ -122,6 +123,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
                     headers={"Cookie": f"sessionKey={token}", "Content-Type": "application/json"},
                     json={"prompt": prompt}
                 )
+            res.raise_for_status()
             return f"Claude: {res.text[:100]}..."
         elif provider == "gemini":
             res = await client.post(
@@ -129,6 +131,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
                     headers={"Cookie": f"__Secure-1PSID={token}", "Content-Type": "application/x-www-form-urlencoded"},
                     data={"f.req": prompt}
                 )
+            res.raise_for_status()
             return f"Gemini: {res.text[:100]}..."
         else:
             raise Exception("Unsupported provider")
