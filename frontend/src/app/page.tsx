@@ -6,6 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Users, Settings, Hash, Bot, Loader2 } from "lucide-react";
 
+// ⚡ Bolt Optimization: Extract individual message item into a memoized component.
+// When a new message is appended to the list, React will reuse the rendered output
+// of existing messages instead of re-rendering all of them, changing O(N) to O(1).
+const MessageItem = React.memo(({ msg }: { msg: string }) => {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
+        <Users className="w-4 h-4 text-neutral-400" />
+      </div>
+      <div>
+        <div className="flex items-baseline gap-2">
+          <span className="font-medium text-sm">User</span>
+          <span className="text-xs text-neutral-500">Just now</span>
+        </div>
+        <p className="text-neutral-300 mt-1">{msg}</p>
+      </div>
+    </div>
+  );
+});
+MessageItem.displayName = 'MessageItem';
+
 // ⚡ Bolt Optimization: Wrap MessageList in React.memo to prevent unnecessary re-renders
 // of the entire message history on every keystroke in the message input field.
 const MessageList = React.memo(({ messages }: { messages: string[] }) => {
@@ -18,18 +39,7 @@ const MessageList = React.memo(({ messages }: { messages: string[] }) => {
   return (
     <>
       {messages.map((msg, idx) => (
-        <div key={idx} className="flex items-start gap-4">
-          <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4 text-neutral-400" />
-          </div>
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-medium text-sm">User</span>
-              <span className="text-xs text-neutral-500">Just now</span>
-            </div>
-            <p className="text-neutral-300 mt-1">{msg}</p>
-          </div>
-        </div>
+        <MessageItem key={idx} msg={msg} />
       ))}
       <div ref={messagesEndRef} />
     </>

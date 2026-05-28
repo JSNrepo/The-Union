@@ -35,3 +35,6 @@
 ## 2024-05-27 - [Missing Foreign Key Index]
 **Learning:** In SQLModel/SQLAlchemy, foreign keys do not automatically get indexes. Fetching child records by their parent's ID (e.g. `select(Agent).where(Agent.owner_id == user.id)`) results in a full table scan, causing a severe bottleneck as the table grows. Furthermore, because this codebase relies on `create_all` at startup instead of Alembic migrations, updating the `Field` definition directly applies the change on a fresh database start.
 **Action:** Always add `index=True` to foreign key `Field` definitions (e.g. `owner_id`) when that field is frequently used in `WHERE` clauses for filtering or listing related entities.
+## 2024-05-28 - [React O(N) List Rendering on Append]
+**Learning:** Even if a parent list component (`MessageList`) is memoized, appending a new item to its prop array (`messages`) forces it to re-render all of its children if they are defined inline. This creates an O(N) rendering cost that becomes a noticeable bottleneck as the message history grows.
+**Action:** Always extract items of long, dynamic lists into standalone components wrapped in `React.memo` (e.g. `MessageItem`). This ensures that when a new item is appended, React reuses the rendered output of existing items, reducing the update cost to O(1).
