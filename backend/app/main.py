@@ -11,11 +11,12 @@ import socketio
 import os
 import asyncio
 import uuid
+from typing import AsyncIterator, Any
 import httpx
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     create_db_and_tables()
     yield
     await shared_transport.aclose()
@@ -167,7 +168,7 @@ async def chat_message(sid: str, data: dict) -> None:
 
         # ⚡ Bolt Optimization: Move synchronous database operations and CPU-bound decryption
         # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
-        def fetch_agent_infos():
+        def fetch_agent_infos() -> list[dict[str, Any]]:
             infos = []
             with Session(engine) as session:
                 results = session.exec(
@@ -186,7 +187,7 @@ async def chat_message(sid: str, data: dict) -> None:
 
         agent_infos = await asyncio.to_thread(fetch_agent_infos)
 
-        async def handle_agent(agent_info):
+        async def handle_agent(agent_info: dict[str, Any]) -> None:
             if agent_info.get("offline"):
                 await sio.emit('chat_update', {'msg': f"Agent {agent_info['name']} is offline (no token available)."}, room=workspace_id)
             else:
@@ -274,7 +275,7 @@ class ProxyRequest(BaseModel):
 async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
     # ⚡ Bolt Optimization: Move synchronous database operations and CPU-bound decryption
     # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
-    def fetch_agent_data():
+    def fetch_agent_data() -> dict[str, Any]:
         # ⚡ Bolt Optimization: Use a JOIN query to fetch both the agent and their token pool entry
         # simultaneously, eliminating the N+1 sequential database queries.
         result = session.exec(
