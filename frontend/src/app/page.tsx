@@ -290,7 +290,7 @@ export default function Home() {
       {sidebarContent}
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col bg-neutral-900" aria-label="Main chat area">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col bg-neutral-900 outline-none" aria-label="Main chat area">
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
           <h2 className="font-semibold flex items-center gap-2">
             <Hash className="w-5 h-5 text-neutral-400" />
