@@ -16,3 +16,6 @@
 ## 2024-05-25 - Semantic HTML Landmarks in SPAs
 **Learning:** Using generic `<div>` containers for major layout regions (like sidebars and main content areas) makes screen reader navigation difficult in Single Page Applications. Users lack context about where they are in the page structure.
 **Action:** Always use semantic HTML5 landmarks (e.g., `<aside>`, `<main>`, `<nav>`) with descriptive `aria-label` attributes for primary application layout sections to ensure proper screen reader announcements and navigation.
+## 2026-05-29 - Accessible Skip to Main Content Link
+**Learning:** Single Page Applications without a "Skip to main content" link force keyboard users and screen readers to traverse the entire navigation menu on every page load.
+**Action:** Always add an accessible skip-to-content link (using `sr-only focus:not-sr-only`) right after the `<body>` tag, and ensure the target `<main>` container has `tabIndex={-1}` and `outline-none` so it can cleanly receive focus programmatically.
