@@ -38,3 +38,6 @@
 ## 2024-05-28 - [React O(N) List Rendering on Append]
 **Learning:** Even if a parent list component (`MessageList`) is memoized, appending a new item to its prop array (`messages`) forces it to re-render all of its children if they are defined inline. This creates an O(N) rendering cost that becomes a noticeable bottleneck as the message history grows.
 **Action:** Always extract items of long, dynamic lists into standalone components wrapped in `React.memo` (e.g. `MessageItem`). This ensures that when a new item is appended, React reuses the rendered output of existing items, reducing the update cost to O(1).
+## 2024-05-30 - [Missing Index on Composite Foreign Keys]
+**Learning:** In SQLModel/SQLAlchemy, while composite primary keys (like in link models) create an implicit composite index, filtering or joining by the secondary column alone (e.g., querying workspaces a user belongs to via `workspace_id`) cannot efficiently use the composite index. This leads to full table scans during relation traversals.
+**Action:** Always add `index=True` explicitly to all foreign key columns in association/link models, even if they are part of a composite primary key, to guarantee fast index-based lookups from both sides of the many-to-many relationship.

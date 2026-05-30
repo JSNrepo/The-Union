@@ -311,7 +311,7 @@ def test_sync_token_missing_api_key_env(client: TestClient):
 def test_register_integrity_error(client: TestClient):
     from sqlalchemy.exc import IntegrityError
     from unittest.mock import patch
-    with patch("sqlmodel.Session.commit", side_effect=IntegrityError("statement", "params", "orig")):
+    with patch("sqlmodel.Session.commit", side_effect=IntegrityError("statement", "params", "orig")): # type: ignore
         response = client.post("/register", json={"username": "race_condition_user", "password": "password123"})
         assert response.status_code == 400
         assert response.json() == {"detail": "Username already registered"}
