@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from contextlib import asynccontextmanager
 from sqlmodel import Session, select, col
+from sqlalchemy.exc import IntegrityError
 from .database import create_db_and_tables, get_session
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
 from .auth import get_password_hash, verify_password, create_access_token, get_current_user
@@ -219,7 +220,11 @@ def register(user: UserCreate, session: Session = Depends(get_session)) -> dict[
 
     new_user = User(username=user.username, hashed_password=get_password_hash(user.password))
     session.add(new_user)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=400, detail="Username already registered")
     return {"msg": "User created"}
 
 # Workspaces
