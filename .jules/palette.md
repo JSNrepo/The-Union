@@ -19,3 +19,7 @@
 ## 2026-05-29 - Accessible Skip to Main Content Link
 **Learning:** Single Page Applications without a "Skip to main content" link force keyboard users and screen readers to traverse the entire navigation menu on every page load.
 **Action:** Always add an accessible skip-to-content link (using `sr-only focus:not-sr-only`) right after the `<body>` tag, and ensure the target `<main>` container has `tabIndex={-1}` and `outline-none` so it can cleanly receive focus programmatically.
+
+## 2024-05-30 - Discoverable Truncation and Contextual Density
+**Learning:** When using CSS truncation (truncate) in constrained spaces like sidebars, users lose information. Furthermore, showing only a primary name (e.g., an agent's name) without secondary context (e.g., their provider) reduces utility.
+**Action:** Always pair CSS truncate with a native title attribute for discoverability on hover, and utilize vertical stacking (flex-col) to present secondary, muted context without compromising horizontal layout constraints.

@@ -242,6 +242,7 @@ export default function Home() {
                       : "hover:bg-neutral-800/50 text-neutral-400"
                   }`}
                   aria-current={activeWorkspace?.id === ws.id ? "true" : undefined}
+                  title={ws.name}
                 >
                   <Hash className="w-4 h-4 shrink-0" />
                   <span className="truncate">{ws.name}</span>
@@ -264,16 +265,20 @@ export default function Home() {
                 agents.map((agent) => (
                 <button
                   key={agent.id}
-                  className="flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600"
+                  className="group flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600"
+                  title={agent.name}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 shrink-0 rounded bg-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
                       <Bot className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-sm">{agent.name}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm truncate">{agent.name}</span>
+                      <span className="text-[10px] text-neutral-500 truncate leading-none">{agent.provider}</span>
+                    </div>
                   </div>
                   <span className="sr-only">Online</span>
-                  <div aria-hidden="true" className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div aria-hidden="true" className="w-2 h-2 shrink-0 rounded-full bg-green-500 ml-2"></div>
                 </button>
                 ))
               )}
