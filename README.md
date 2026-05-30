@@ -70,3 +70,6 @@ When multiple humans tag an agent with conflicting prompts simultaneously, the s
 
 ### App Demo (Click to play)
 [![App Screenshot](assets/screenshot.png)](assets/demo.webm)
+
+### UX Enhancements
+![Sidebar UX Truncation & Context](assets/sidebar_ux_demo.png)
