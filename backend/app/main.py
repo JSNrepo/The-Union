@@ -53,7 +53,7 @@ import hmac
 from typing import Any
 
 @app.post("/sync-token")
-def sync_token(req: SyncTokenRequest, x_api_key: str = Header(None), session: Session = Depends(get_session)) -> dict[str, str]:
+def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=None), session: Session = Depends(get_session)) -> dict[str, str]:
     expected_api_key = os.getenv("EXTENSION_API_KEY")
     if not expected_api_key:
         raise HTTPException(status_code=500, detail="Server configuration error")
