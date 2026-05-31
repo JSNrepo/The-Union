@@ -130,6 +130,40 @@ def test_sync_token_invalid_api_key(client: TestClient):
     assert response.status_code == 403
     assert response.json() == {"detail": "Invalid API Key"}
 
+from unittest.mock import patch
+from sqlalchemy.exc import IntegrityError
+
+def test_sync_token_integrity_error(client: TestClient):
+    client.post("/register", json={"username": "syncracer", "password": "password"})
+
+    from app.main import get_session
+    from app.models import Agent, User
+    from sqlmodel import select
+
+    with next(get_session_override()) as session:
+        user = session.exec(select(User).where(User.username == "syncracer")).first()
+        assert user is not None
+        user_id = user.id
+        agent_id = uuid.uuid4()
+        agent = Agent(id=agent_id, name="RaceAgent", owner_id=user_id, provider="openai")
+        session.add(agent)
+        session.commit()
+
+    ext_api_key = os.getenv("EXTENSION_API_KEY")
+    assert ext_api_key is not None
+    sync_headers = {"x-api-key": ext_api_key}
+    sync_data = {
+        "provider": "openai",
+        "token": "my-secret-token",
+        "agent_id": str(agent_id),
+    }
+
+    with patch("app.main.Session.commit", side_effect=IntegrityError("mocked", "params", "orig")) as mock_commit: # type: ignore
+        response = client.post("/sync-token", json=sync_data, headers=sync_headers)
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Token for this agent already exists"}
+
 def test_sync_token_agent_not_found(client: TestClient):
     ext_api_key = os.getenv("EXTENSION_API_KEY")
     assert ext_api_key is not None
