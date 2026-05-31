@@ -105,6 +105,11 @@ async def join_workspace(sid: str, data: dict) -> None:
     if not isinstance(workspace_id, str) or len(workspace_id) > 100:
         return
 
+    try:
+        ws_uuid = uuid.UUID(workspace_id)
+    except (ValueError, TypeError, AttributeError):
+        return
+
     await sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
 
