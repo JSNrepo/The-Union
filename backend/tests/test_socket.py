@@ -17,11 +17,12 @@ async def test_disconnect():
 
 @pytest.mark.anyio
 async def test_join_workspace():
+    ws_id = str(uuid.uuid4())
     with patch.object(sio, 'enter_room') as mock_enter, \
          patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
-        await join_workspace('sid1', {'workspace_id': 'ws1'})
-        mock_enter.assert_called_once_with('sid1', 'ws1')
-        mock_emit.assert_called_once_with('message', {'msg': 'Someone joined ws1'}, room='ws1')
+        await join_workspace('sid1', {'workspace_id': ws_id})
+        mock_enter.assert_called_once_with('sid1', ws_id)
+        mock_emit.assert_called_once_with('message', {'msg': f'Someone joined {ws_id}'}, room=ws_id)
 
 @pytest.mark.anyio
 async def test_chat_message_basic():
@@ -142,6 +143,10 @@ async def test_join_workspace_invalid():
 
         # Test workspace_id too long
         await join_workspace('sid1', {'workspace_id': 'a'*101})
+        mock_enter.assert_not_called()
+
+        # Test malformed UUID for workspace_id
+        await join_workspace('sid1', {'workspace_id': 'not-a-uuid'})
         mock_enter.assert_not_called()
 
 @pytest.mark.anyio
