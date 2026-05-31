@@ -84,7 +84,11 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
         pool_entry = TokenPool(agent_id=agent.id, owner_user_id=owner_id, encrypted_session_token=encrypted)
         session.add(pool_entry)
 
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Token for this agent already exists")
     return {"status": "success"}
 
 # Socket.IO Event Handlers
