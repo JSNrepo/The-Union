@@ -150,6 +150,11 @@ async def chat_message(sid: str, data: dict) -> None:
     if not isinstance(workspace_id, str) or len(workspace_id) > 100:
         return
 
+    try:
+        ws_uuid = uuid.UUID(workspace_id)
+    except (ValueError, TypeError, AttributeError):
+        return
+
     if not isinstance(message, str) or len(message) > 5000:
         return
 
@@ -176,6 +181,7 @@ async def chat_message(sid: str, data: dict) -> None:
                     select(Agent, TokenPool)
                     .join(TokenPool, isouter=True)
                     .where(col(Agent.name).in_(agent_names))
+                    .where(Agent.workspace_id == ws_uuid)
                 ).all()
 
                 for agent, pool_entry in results:
