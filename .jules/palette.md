@@ -23,3 +23,6 @@
 ## 2024-05-30 - Discoverable Truncation and Contextual Density
 **Learning:** When using CSS truncation (truncate) in constrained spaces like sidebars, users lose information. Furthermore, showing only a primary name (e.g., an agent's name) without secondary context (e.g., their provider) reduces utility.
 **Action:** Always pair CSS truncate with a native title attribute for discoverability on hover, and utilize vertical stacking (flex-col) to present secondary, muted context without compromising horizontal layout constraints.
+## 2026-05-31 - Chat layout flex and overflow
+**Learning:** In flex layouts containing user-generated text, parent containers require min-w-0 and the text container needs break-words to prevent the UI from stretching and breaking.
+**Action:** Always combine min-w-0 on flex containers with break-words on text elements for message bubbles.

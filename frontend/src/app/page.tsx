@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Users, Settings, Hash, Bot, Loader2 } from "lucide-react";
+import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send } from "lucide-react";
 
 // ⚡ Bolt Optimization: Extract individual message item into a memoized component.
 // When a new message is appended to the list, React will reuse the rendered output
@@ -15,12 +15,12 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
       <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
         <Users className="w-4 h-4 text-neutral-400" />
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-medium text-sm">User</span>
           <span className="text-xs text-neutral-500">Just now</span>
         </div>
-        <p className="text-neutral-300 mt-1">{msg}</p>
+        <p className="text-neutral-300 mt-1 whitespace-pre-wrap break-words">{msg}</p>
       </div>
     </div>
   );
@@ -122,7 +122,7 @@ const MessageInput = React.memo(({ onSendMessage, disabled }: { onSendMessage: (
         aria-label="Send message"
         title={disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
       >
-        <MessageSquare className="w-4 h-4" />
+        <Send className="w-4 h-4" />
       </Button>
     </form>
   );
