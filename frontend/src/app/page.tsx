@@ -136,6 +136,7 @@ export default function Home() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
@@ -163,8 +164,10 @@ export default function Home() {
           setActiveWorkspace(workspacesList[0]);
         }
         setAgents(agentsList);
+        setError(null);
       } catch (err) {
         console.error("Error fetching data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load workspace data");
       } finally {
         setIsLoading(false);
       }
@@ -229,6 +232,8 @@ export default function Home() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-8 bg-neutral-800/50 rounded-md animate-pulse"></div>
                 ))
+              ) : error ? (
+                <div className="text-sm text-red-500 px-2 py-1.5">Error loading workspaces</div>
               ) : workspaces.length === 0 ? (
                 <div className="text-sm text-neutral-500 px-2 py-1.5">No workspaces found</div>
               ) : (
@@ -259,6 +264,8 @@ export default function Home() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-9 bg-neutral-800/50 rounded-md animate-pulse"></div>
                 ))
+              ) : error ? (
+                <div className="text-sm text-red-500 px-2 py-1.5">Error loading agents</div>
               ) : agents.length === 0 ? (
                 <div className="text-sm text-neutral-500 px-2 py-1.5">No agents available</div>
               ) : (
@@ -287,7 +294,7 @@ export default function Home() {
         </div>
       </aside>
     );
-  }, [isLoading, workspaces, agents, activeWorkspace?.id]);
+  }, [isLoading, error, workspaces, agents, activeWorkspace?.id]);
 
   return (
     <div className="flex h-screen bg-neutral-900 text-white font-sans">
@@ -308,6 +315,16 @@ export default function Home() {
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
               <span className="sr-only">Loading workspace data...</span>
+            </div>
+          ) : error ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-red-500 space-y-4 my-auto">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                <Settings className="w-6 h-6 text-red-500" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-medium">Failed to load data</p>
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
             </div>
           ) : !activeWorkspace ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
