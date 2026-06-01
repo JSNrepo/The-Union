@@ -1,0 +1,43 @@
+
+> frontend@0.1.0 dev /app/frontend
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 540ms
+
+○ Compiling / ...
+ GET / 200 in 5.7s (next.js: 5.1s, application-code: 612ms)
+[browser] Error fetching data: TypeError: Failed to fetch
+    at Home.useEffect.fetchData (src/app/page.tsx:148:11)
+    at Home.useEffect (src/app/page.tsx:176:5)
+  146 |       try {
+  147 |         const [wsRes, agentRes] = await Promise.all([
+> 148 |           fetch(`${apiUrl}/workspaces`),
+      |           ^
+  149 |           fetch(`${apiUrl}/agents`)
+  150 |         ]);
+  151 | (src/app/page.tsx:169:17)
+ GET / 200 in 78ms (next.js: 6ms, application-code: 71ms)
+[browser] Error fetching data: TypeError: Failed to fetch
+    at Home.useEffect.fetchData (src/app/page.tsx:148:11)
+    at Home.useEffect (src/app/page.tsx:176:5)
+  146 |       try {
+  147 |         const [wsRes, agentRes] = await Promise.all([
+> 148 |           fetch(`${apiUrl}/workspaces`),
+      |           ^
+  149 |           fetch(`${apiUrl}/agents`)
+  150 |         ]);
+  151 | (src/app/page.tsx:169:17)
+ GET / 200 in 61ms (next.js: 4ms, application-code: 57ms)
+[browser] Error fetching data: Error: Failed to fetch data from API
+    at Home.useEffect.fetchData (src/app/page.tsx:153:17)
+  151 |
+  152 |         if (!wsRes.ok || !agentRes.ok) {
+> 153 |           throw new Error("Failed to fetch data from API");
+      |                 ^
+  154 |         }
+  155 |
+  156 |         const wsData: unknown = await wsRes.json(); (src/app/page.tsx:169:17)
+ GET / 200 in 59ms (next.js: 4ms, application-code: 55ms)

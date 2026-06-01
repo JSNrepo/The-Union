@@ -73,3 +73,9 @@ When multiple humans tag an agent with conflicting prompts simultaneously, the s
 
 ### UX Enhancements
 ![Sidebar UX Truncation & Context](assets/sidebar_ux_demo.png)
+
+#### Prevent UI Flicker During Hydration
+To prevent generic, unhelpful empty states ("No Workspace Selected") from flashing before the initial backend data fetch completes, ancillary components like headers and inputs now accept an `isLoading` prop and elegantly render animated skeleton pulse loaders.
+
+![Loading Skeleton State](assets/verification_loading.png)
+[![Loaded State Demo](assets/verification_loaded.png)](assets/verification_demo.webm)

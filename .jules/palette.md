@@ -26,3 +26,7 @@
 ## 2026-05-31 - Chat layout flex and overflow
 **Learning:** In flex layouts containing user-generated text, parent containers require min-w-0 and the text container needs break-words to prevent the UI from stretching and breaking.
 **Action:** Always combine min-w-0 on flex containers with break-words on text elements for message bubbles.
+
+## 2024-06-01 - Prevent Ancillary UI Flicker During Hydration
+**Learning:** During initial application load, rendering full layout structural elements (like top headers or chat inputs) before data hydration completes can cause a jarring flicker where generic empty states (e.g., "Select a Workspace") flash for a second before the real data arrives.
+**Action:** Always pass the `isLoading` state down to ancillary structural components (like headers and inputs). Use it to conditionally render skeleton loaders (e.g. `animate-pulse`) in headers, and explicitly display "Loading..." in input placeholders or disabled buttons to provide a cohesive loading experience.
