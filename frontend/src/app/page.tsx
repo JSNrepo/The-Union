@@ -60,7 +60,7 @@ interface Agent {
 
 // ⚡ Bolt Optimization: Extract MessageInput to its own component so that typing
 // doesn't trigger a re-render of the entire Home component (and Sidebar).
-const MessageInput = React.memo(({ onSendMessage, disabled }: { onSendMessage: (msg: string) => void, disabled: boolean }) => {
+const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSendMessage: (msg: string) => void, disabled: boolean, isLoading?: boolean }) => {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +101,7 @@ const MessageInput = React.memo(({ onSendMessage, disabled }: { onSendMessage: (
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder={disabled ? "Select a workspace to message..." : "Message @agents or team..."}
+        placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : "Message @agents or team..."}
         className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600"
         disabled={disabled}
         aria-label="Message input"
@@ -120,7 +120,7 @@ const MessageInput = React.memo(({ onSendMessage, disabled }: { onSendMessage: (
         className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
         disabled={!message.trim() || disabled}
         aria-label="Send message"
-        title={disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
+        title={isLoading ? "Loading..." : disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
       >
         <Send className="w-4 h-4" />
       </Button>
@@ -304,9 +304,15 @@ export default function Home() {
       {/* Main Chat Area */}
       <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col bg-neutral-900 outline-none" aria-label="Main chat area">
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Hash className="w-5 h-5 text-neutral-400" />
-            {activeWorkspace?.name || "Select a Workspace"}
+          <h2 className="font-semibold flex items-center gap-2 min-w-0">
+            <Hash className="w-5 h-5 text-neutral-400 shrink-0" />
+            {isLoading ? (
+              <div className="h-5 w-32 bg-neutral-800 rounded animate-pulse"></div>
+            ) : (
+              <span className="truncate" title={activeWorkspace?.name || "Select a Workspace"}>
+                {activeWorkspace?.name || "Select a Workspace"}
+              </span>
+            )}
           </h2>
         </div>
 
@@ -352,7 +358,7 @@ export default function Home() {
         </div>
 
         <div className="p-4 px-6 pb-6">
-          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} />
+          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} isLoading={isLoading} />
         </div>
       </main>
     </div>
