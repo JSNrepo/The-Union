@@ -7,6 +7,7 @@ from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
 from .auth import get_password_hash, verify_password, create_access_token, get_current_user
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 import socketio
 import os
@@ -25,6 +26,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title="The Union", lifespan=lifespan)
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+
+# ⚡ Bolt Optimization: Add GZip middleware to compress request/response payloads
+# This significantly reduces payload sizes for large API responses (like workspace/agent lists),
+# lowering bandwidth usage and improving load times over slow networks.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.add_middleware(
     CORSMiddleware,
