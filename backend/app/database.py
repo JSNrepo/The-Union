@@ -4,7 +4,9 @@ from typing import Generator
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./union.db")
 
-engine = create_engine(DATABASE_URL, echo=True)
+# ⚡ Bolt Optimization: Disable synchronous SQL logging (echo=False) to prevent I/O blocking
+# from writing every SQL statement to stdout, which degrades request throughput.
+engine = create_engine(DATABASE_URL, echo=False)
 
 def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
