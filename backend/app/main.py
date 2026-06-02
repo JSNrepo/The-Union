@@ -257,7 +257,11 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
     ws = Workspace(name=req.name)
     ws.members.append(current_user)
     session.add(ws)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="Database integrity error occurred while creating workspace")
     session.refresh(ws)
     return ws
 

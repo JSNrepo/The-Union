@@ -4,6 +4,8 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 import uuid
 import os
+from unittest.mock import patch
+from sqlalchemy.exc import IntegrityError
 
 from app.main import app, get_session
 from app.models import User, Workspace, Agent
@@ -349,3 +351,21 @@ def test_register_integrity_error(client: TestClient):
         response = client.post("/register", json={"username": "race_condition_user", "password": "password123"})
         assert response.status_code == 400
         assert response.json() == {"detail": "Username already registered"}
+
+def test_create_workspace_integrity_error(client: TestClient):
+    # Setup user and get token
+    client.post("/register", json={"username": "ws_user_error", "password": "password123"})
+    res = client.post("/login", json={"username": "ws_user_error", "password": "password123"})
+    token = res.json()["access_token"]
+
+    with patch("sqlmodel.Session.commit") as mock_commit:
+        mock_commit.side_effect = IntegrityError("mock error", "mock params", "mock orig") # type: ignore
+
+        res = client.post(
+            "/workspaces",
+            json={"name": "Test Workspace"},
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert res.status_code == 500
+        assert res.json()["detail"] == "Database integrity error occurred while creating workspace"
