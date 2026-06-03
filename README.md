@@ -79,3 +79,8 @@ To prevent generic, unhelpful empty states ("No Workspace Selected") from flashi
 
 ![Loading Skeleton State](assets/verification_loading.png)
 [![Loaded State Demo](assets/verification_loaded.png)](assets/verification_demo.webm)
+
+#### Actionable Error States
+To improve user experience and clarity during network failures, generic error messages have been replaced with descriptive headers and actionable suggestions, alongside appropriate visual indicators.
+
+![Actionable Error State](assets/verification_error_state.png)
