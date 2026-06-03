@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send } from "lucide-react";
+import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send, AlertTriangle } from "lucide-react";
 
 // ⚡ Bolt Optimization: Extract individual message item into a memoized component.
 // When a new message is appended to the list, React will reuse the rendered output
@@ -325,11 +325,12 @@ export default function Home() {
           ) : error ? (
             <div className="flex-1 flex flex-col items-center justify-center text-red-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
-                <Settings className="w-6 h-6 text-red-500" />
+                <AlertTriangle className="w-6 h-6 text-red-500" aria-hidden="true" />
               </div>
-              <div className="text-center">
-                <p className="text-lg font-medium">Failed to load data</p>
-                <p className="text-sm text-red-400">{error}</p>
+              <div className="text-center max-w-md">
+                <p className="text-lg font-medium" role="alert">Connection Error</p>
+                <p className="text-sm text-red-400 mb-2">{error}</p>
+                <p className="text-sm text-neutral-400">Please check your network connection or try refreshing the page.</p>
               </div>
             </div>
           ) : !activeWorkspace ? (
