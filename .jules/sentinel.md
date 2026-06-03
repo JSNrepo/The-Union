@@ -29,3 +29,7 @@
 **Vulnerability:** The `/agents` and `/workspaces` GET endpoints returned all resources in the database instead of scoping the results to the authenticated user. This was an Insecure Direct Object Reference (IDOR) / authorization bypass vulnerability.
 **Learning:** `get_current_user` only provides authentication (verifying the token is valid), but does not perform resource-level authorization. Returning `session.exec(select(Workspace)).all()` will indiscriminately return all rows.
 **Prevention:** Always scope queries using the current user's ID (`.where(Agent.owner_id == current_user.id)`) when fetching lists of resources.
+## 2026-06-03 - [Insecure Direct Object Reference (IDOR) on WebSocket Events]
+**Vulnerability:** The Socket.IO event handlers `join_workspace` and `chat_message` did not enforce any authentication or authorization. A malicious client could connect, pass any `workspace_id`, and both listen to private messages or spoof agent interactions using the workspace's resources.
+**Learning:** Real-time components (like WebSockets/Socket.IO) are often forgotten when adding API security because they handle events differently from HTTP routes. They do not automatically use FastAPI `Depends` authentication.
+**Prevention:** Always enforce resource scoping and authentication in WebSocket handlers. Require clients to send an authentication token, validate it manually via JWT decoding, and ensure the user's ID is authorized for the requested resource (e.g., verifying `UserWorkspaceLink`).

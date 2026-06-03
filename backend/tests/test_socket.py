@@ -3,6 +3,32 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from app.main import join_workspace, chat_message, sio, call_provider_api, connect, disconnect
 import uuid
 
+@pytest.fixture(autouse=True)
+def mock_ws_auth():
+    with patch('app.main.verify_ws_auth_sync', return_value=True), \
+         patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session, \
+         patch.object(sio, 'session') as mock_session:
+        class UniversalSet(set):
+            def __contains__(self, item):
+                return True
+            def add(self, item):
+                pass
+
+        mock_get_session.return_value = {'workspaces': UniversalSet()}
+
+        # We need a proper context manager mock for sio.session
+        class MockSessionContext:
+            def __init__(self, sid):
+                self.sid = sid
+                self.data = {'workspaces': UniversalSet()}
+            async def __aenter__(self):
+                return self.data
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                pass
+        mock_session.side_effect = lambda sid: MockSessionContext(sid)
+
+        yield
+
 @pytest.mark.anyio
 async def test_connect():
     with patch('builtins.print') as mock_print:
@@ -20,7 +46,7 @@ async def test_join_workspace():
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'enter_room') as mock_enter, \
          patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
-        await join_workspace('sid1', {'workspace_id': ws_id})
+        await join_workspace('sid1', {'workspace_id': ws_id, 'token': 'mock'})
         mock_enter.assert_called_once_with('sid1', ws_id)
         mock_emit.assert_called_once_with('message', {'msg': f'Someone joined {ws_id}'}, room=ws_id)
 
@@ -28,17 +54,17 @@ async def test_join_workspace():
 async def test_chat_message_basic():
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'Hello world'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello world'})
         mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello world'}, room=ws_id)
 
 @pytest.mark.anyio
 async def test_chat_message_invalid():
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': None})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': None})
         mock_emit.assert_not_called()
 
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'a'*5001})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'a'*5001})
         mock_emit.assert_not_called()
 
 @pytest.mark.anyio
@@ -67,7 +93,7 @@ async def test_chat_message_mention_agent():
 
         mock_call.return_value = "Mock API Response"
 
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'Hello @TestAgent'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @TestAgent'})
 
         assert mock_emit.call_count == 2
         mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room=ws_id)
@@ -90,7 +116,7 @@ async def test_chat_message_mention_agent_offline():
 
         mock_db.exec.return_value.all.return_value = [(mock_agent, None)] # No token pool entry
 
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'Hello @TestAgent'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @TestAgent'})
 
         assert mock_emit.call_count == 2
         mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room=ws_id)
@@ -122,7 +148,7 @@ async def test_chat_message_mention_agent_api_error():
 
         mock_call.side_effect = Exception("API error")
 
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'Hello @TestAgent'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @TestAgent'})
 
         assert mock_emit.call_count == 2
         mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room=ws_id)
@@ -176,7 +202,7 @@ async def test_chat_message_mention_without_valid_agents():
          patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call:
 
         # Test string with just "@" but no agent name attached
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'Hello @ everyone'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @ everyone'})
 
         # chat_update is emitted for the original message
         mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello @ everyone'}, room=ws_id)
@@ -188,5 +214,5 @@ async def test_chat_message_mention_without_valid_agents():
 async def test_chat_message_mention_agent_no_names_empty():
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
-        await chat_message('sid1', {'workspace_id': ws_id, 'message': 'hello@world'})
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'hello@world'})
         mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room=ws_id)
