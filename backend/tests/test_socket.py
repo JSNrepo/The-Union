@@ -216,3 +216,19 @@ async def test_chat_message_mention_agent_no_names_empty():
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
         await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'hello@world'})
         mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room=ws_id)
+
+@pytest.mark.anyio
+async def test_chat_message_unauthorized_workspace():
+    ws_id = str(uuid.uuid4())
+    # Note: the mock_get_session fixture from conftest returns a UniversalSet which contains everything
+    # So we need to override the get_session mock specifically for this test
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session:
+
+        # This user has no authorized workspaces
+        mock_get_session.return_value = {'workspaces': set()}
+
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello world'})
+
+        # Message should not be emitted because the user hasn't joined the workspace
+        mock_emit.assert_not_called()
