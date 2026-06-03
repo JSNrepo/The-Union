@@ -102,19 +102,34 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
 async def connect(sid: str, environ: dict) -> None:
     print(f"Client connected: {sid}")
 
+def verify_ws_auth_sync(workspace_id: str, token: str) -> bool:
+    try:
+        ws_uuid = uuid.UUID(workspace_id)
+        import jwt; from .auth import SECRET_KEY, ALGORITHM
+        user_uuid = uuid.UUID(jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("sub"))
+        from .database import engine; from sqlmodel import Session; from .models import UserWorkspaceLink
+        with Session(engine) as session:
+            return session.get(UserWorkspaceLink, (user_uuid, ws_uuid)) is not None
+    except Exception as e:
+        print(f"WebSocket auth error: {e}")
+        return False
+
 @sio.event
 async def join_workspace(sid: str, data: dict) -> None:
     # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
     if not isinstance(data, dict):
         return
     workspace_id = data.get('workspace_id')
-    if not isinstance(workspace_id, str) or len(workspace_id) > 100:
+    token = data.get('token')
+    if not isinstance(workspace_id, str) or len(workspace_id) > 100 or not isinstance(token, str):
         return
 
-    try:
-        ws_uuid = uuid.UUID(workspace_id)
-    except (ValueError, TypeError, AttributeError):
-        return
+    if not await asyncio.to_thread(verify_ws_auth_sync, workspace_id, token): return
+
+    async with sio.session(sid) as session:
+        auth_workspaces = session.get('workspaces', set())
+        auth_workspaces.add(workspace_id)
+        session['workspaces'] = auth_workspaces
 
     await sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
@@ -163,6 +178,10 @@ async def chat_message(sid: str, data: dict) -> None:
     message = data.get('message')
 
     if not isinstance(workspace_id, str) or len(workspace_id) > 100:
+        return
+
+    session_data = await sio.get_session(sid)
+    if workspace_id not in session_data.get('workspaces', set()):
         return
 
     try:

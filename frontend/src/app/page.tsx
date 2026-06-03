@@ -186,7 +186,7 @@ export default function Home() {
 
     newSocket.on("connect", () => {
       console.log("Connected to WebSocket");
-      newSocket.emit("join_workspace", { workspace_id: activeWorkspace.id });
+      newSocket.emit("join_workspace", { workspace_id: activeWorkspace.id, token: localStorage.getItem("token") || "" });
     });
 
     newSocket.on("message", (data) => {
@@ -208,7 +208,7 @@ export default function Home() {
   // This prevents the memoized MessageInput from re-rendering needlessly.
   const handleSendMessage = useCallback((msg: string) => {
     if (socketRef.current && activeWorkspace) {
-      socketRef.current.emit("chat_message", { workspace_id: activeWorkspace.id, message: msg });
+      socketRef.current.emit("chat_message", { workspace_id: activeWorkspace.id, message: msg, token: localStorage.getItem("token") || "" });
     }
   }, [activeWorkspace]);
 
