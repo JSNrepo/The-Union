@@ -144,9 +144,14 @@ export default function Home() {
     // reducing initial load time and preventing sequential blocking.
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("token") || "";
+        const headers = {
+          "Authorization": `Bearer ${token}`
+        };
+
         const [wsRes, agentRes] = await Promise.all([
-          fetch(`${apiUrl}/workspaces`),
-          fetch(`${apiUrl}/agents`)
+          fetch(`${apiUrl}/workspaces`, { headers }),
+          fetch(`${apiUrl}/agents`, { headers })
         ]);
 
         if (!wsRes.ok || !agentRes.ok) {
