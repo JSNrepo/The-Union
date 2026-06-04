@@ -33,3 +33,7 @@
 ## 2024-06-03 - Actionable Error Messages
 **Learning:** Generic "Failed to load data" messages with inappropriate icons (like Settings gears) leave users confused about what went wrong and what to do next. Replacing them with explicit headers (e.g., "Connection Error"), actionable next steps (e.g., "Please check your network connection"), and clear semantic icons (e.g., `AlertTriangle`) significantly improves the usability of error states.
 **Action:** Always pair error states with an actionable suggestion and an appropriate visual indicator, rather than just displaying raw error strings or generic messages.
+
+## 2024-06-04 - Decorative Icons and Truncated Secondary Text
+**Learning:** Purely decorative icons (like `Users`, `Bot`, `Hash`, `MessageSquare`, etc.) inside interactive elements (like buttons or links) or general layout containers can cause redundant or confusing announcements for screen reader users. Also, secondary text (like a provider name) that gets truncated by CSS loses its meaning if it is not discoverable.
+**Action:** Always add `aria-hidden="true"` to purely decorative icons to prevent screen readers from announcing them unnecessarily, especially when they are accompanied by visible text or semantic labels. Additionally, always add a `title` attribute to any secondary text that relies on CSS truncation to ensure users can hover to discover the full context.

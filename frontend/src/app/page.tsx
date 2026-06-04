@@ -13,7 +13,7 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
   return (
     <div className="flex items-start gap-4">
       <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
-        <Users className="w-4 h-4 text-neutral-400" />
+        <Users className="w-4 h-4 text-neutral-400" aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
@@ -122,7 +122,7 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         aria-label="Send message"
         title={isLoading ? "Loading..." : disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
       >
-        <Send className="w-4 h-4" />
+        <Send className="w-4 h-4" aria-hidden="true" />
       </Button>
     </form>
   );
@@ -225,7 +225,7 @@ export default function Home() {
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
           <button aria-label="Settings" title="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md">
-            <Settings className="w-5 h-5 cursor-pointer" />
+            <Settings className="w-5 h-5 cursor-pointer" aria-hidden="true" />
           </button>
         </div>
 
@@ -254,7 +254,7 @@ export default function Home() {
                   aria-current={activeWorkspace?.id === ws.id ? "true" : undefined}
                   title={ws.name}
                 >
-                  <Hash className="w-4 h-4 shrink-0" />
+                  <Hash className="w-4 h-4 shrink-0" aria-hidden="true" />
                   <span className="truncate">{ws.name}</span>
                 </button>
                 ))
@@ -282,11 +282,11 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-6 h-6 shrink-0 rounded bg-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                      <Bot className="w-3 h-3 text-white" />
+                      <Bot className="w-3 h-3 text-white" aria-hidden="true" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-sm truncate">{agent.name}</span>
-                      <span className="text-[10px] text-neutral-500 truncate leading-none">{agent.provider}</span>
+                      <span className="text-[10px] text-neutral-500 truncate leading-none" title={agent.provider}>{agent.provider}</span>
                     </div>
                   </div>
                   <span className="sr-only">Online</span>
@@ -310,7 +310,7 @@ export default function Home() {
       <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col bg-neutral-900 outline-none" aria-label="Main chat area">
         <div className="h-14 border-b border-neutral-800 flex items-center px-6">
           <h2 className="font-semibold flex items-center gap-2 min-w-0">
-            <Hash className="w-5 h-5 text-neutral-400 shrink-0" />
+            <Hash className="w-5 h-5 text-neutral-400 shrink-0" aria-hidden="true" />
             {isLoading ? (
               <div className="h-5 w-32 bg-neutral-800 rounded animate-pulse"></div>
             ) : (
@@ -324,7 +324,7 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col" role="log" aria-live="polite">
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
-              <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" aria-hidden="true" />
               <span className="sr-only">Loading workspace data...</span>
             </div>
           ) : error ? (
@@ -341,7 +341,7 @@ export default function Home() {
           ) : !activeWorkspace ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
-                <Hash className="w-6 h-6 text-neutral-400" />
+                <Hash className="w-6 h-6 text-neutral-400" aria-hidden="true" />
               </div>
               <div className="text-center">
                 <p className="text-lg font-medium text-neutral-300">No workspace selected</p>
@@ -351,7 +351,7 @@ export default function Home() {
           ) : messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-neutral-400" />
+                <MessageSquare className="w-6 h-6 text-neutral-400" aria-hidden="true" />
               </div>
               <div className="text-center">
                 <p className="text-lg font-medium text-neutral-300">No messages yet</p>
