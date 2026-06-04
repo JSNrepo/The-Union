@@ -363,7 +363,7 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
     # making the slow external API call to prevent connection pool exhaustion.
     session.close()
 
-    print(f"Proxying request to {provider} using token: {token[:10]}...")
+    print(f"Proxying request to {provider}...")
 
     try:
         response_text = await call_provider_api(provider, token, req.prompt)
