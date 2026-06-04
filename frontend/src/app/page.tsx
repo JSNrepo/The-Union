@@ -76,11 +76,6 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         e.preventDefault();
         inputRef.current?.focus();
       }
-
-      // Blur input on Escape key
-      if (e.key === "Escape" && document.activeElement === inputRef.current) {
-        inputRef.current?.blur();
-      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -95,12 +90,19 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
     }
   };
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      inputRef.current?.blur();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center">
       <Input
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleInputKeyDown}
         placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : "Message @agents or team..."}
         className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600"
         disabled={disabled}
