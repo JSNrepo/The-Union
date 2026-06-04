@@ -280,7 +280,7 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
         session.commit()
     except IntegrityError:
         session.rollback()
-        raise HTTPException(status_code=500, detail="Database integrity error occurred while creating workspace")
+        raise HTTPException(status_code=400, detail="Workspace name already exists")
     session.refresh(ws)
     return ws
 
