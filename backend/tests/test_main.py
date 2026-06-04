@@ -367,5 +367,5 @@ def test_create_workspace_integrity_error(client: TestClient):
             headers={"Authorization": f"Bearer {token}"}
         )
 
-        assert res.status_code == 500
-        assert res.json()["detail"] == "Database integrity error occurred while creating workspace"
+        assert res.status_code == 400
+        assert res.json()["detail"] == "Workspace name already exists"

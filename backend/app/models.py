@@ -16,7 +16,7 @@ class User(SQLModel, table=True):
 
 class Workspace(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str
+    name: str = Field(unique=True, index=True)
     members: List["User"] = Relationship(back_populates="workspaces", link_model=UserWorkspaceLink)
 
 class Agent(SQLModel, table=True):
