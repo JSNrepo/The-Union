@@ -47,3 +47,6 @@
 ## 2024-06-04 - [React Synthetic Events vs Global Listeners]
 **Learning:** Attaching global `document.addEventListener` for interactions specific to a single element (like blurring an input on Escape) inside a `useEffect` is an anti-pattern in React. It bypasses React's optimized event delegation system, forces unnecessary effect cleanup/setup churn, and can lead to performance degradation or memory leaks if not managed perfectly.
 **Action:** Always use React's built-in synthetic event props (like `onKeyDown`) directly on the target element for interactions specific to that element. Only use global `document` listeners for true global shortcuts (like focusing the input with `/` from anywhere on the page).
+## 2026-06-05 - [Unnecessary WebSocket Reconnections]
+**Learning:** Including an entire object reference (like `activeWorkspace`) instead of its primitive identity (like `activeWorkspace?.id`) in the dependency array of a `useEffect` that manages expensive connections (like WebSockets) causes the connection to be needlessly destroyed and recreated whenever the object reference changes, even if the underlying identity (ID) remains the same.
+**Action:** Extract the specific primitive properties needed for side effects and use only those primitives in the dependency array to prevent unnecessary teardowns and reconnections.
