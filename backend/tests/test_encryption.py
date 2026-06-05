@@ -31,8 +31,6 @@ import uuid
 
 def test_get_encryption_key_missing_master_key():
     with patch.dict(os.environ, clear=True):
-        if "UNION_MASTER_KEY" in os.environ:
-            del os.environ["UNION_MASTER_KEY"]
         with pytest.raises(RuntimeError, match="UNION_MASTER_KEY environment variable is not set"):
             get_encryption_key()
 
