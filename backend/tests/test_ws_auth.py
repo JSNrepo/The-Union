@@ -20,7 +20,7 @@ def test_verify_ws_auth_sync_success():
 
     token = create_access_token({"sub": str(user_uuid)})
 
-    with patch('app.database.engine', test_engine):
+    with patch('app.main.engine', test_engine):
         assert verify_ws_auth_sync(str(ws_uuid), token) == True
 
 def test_verify_ws_auth_sync_not_found():
@@ -32,7 +32,7 @@ def test_verify_ws_auth_sync_not_found():
 
     token = create_access_token({"sub": str(user_uuid)})
 
-    with patch('app.database.engine', test_engine):
+    with patch('app.main.engine', test_engine):
         assert verify_ws_auth_sync(str(ws_uuid), token) == False
 
 def test_verify_ws_auth_sync_exception():

@@ -2,9 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException, status, Header
 from contextlib import asynccontextmanager
 from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
-from .database import create_db_and_tables, get_session
+from .database import create_db_and_tables, get_session, engine
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
-from .auth import get_password_hash, verify_password, create_access_token, get_current_user
+from .auth import get_password_hash, verify_password, create_access_token, get_current_user, SECRET_KEY, ALGORITHM
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -15,6 +15,7 @@ import asyncio
 import uuid
 from typing import AsyncIterator, Any
 import httpx
+import jwt
 
 
 @asynccontextmanager
@@ -104,12 +105,10 @@ async def connect(sid: str, environ: dict) -> None:
 def verify_ws_auth_sync(workspace_id: str, token: str) -> bool:
     try:
         ws_uuid = uuid.UUID(workspace_id)
-        import jwt; from .auth import SECRET_KEY, ALGORITHM
         user_uuid = uuid.UUID(jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("sub"))
-        from .database import engine; from sqlmodel import Session; from .models import UserWorkspaceLink
         with Session(engine) as session:
             return session.get(UserWorkspaceLink, (user_uuid, ws_uuid)) is not None
-    except Exception as e:
+    except (jwt.PyJWTError, ValueError, TypeError, AttributeError) as e:
         print(f"WebSocket auth error: {e}")
         return False
 
