@@ -185,7 +185,8 @@ export default function Home() {
   }, [apiUrl]);
 
   useEffect(() => {
-    if (!activeWorkspace) return;
+    const activeWorkspaceId = activeWorkspace?.id;
+    if (!activeWorkspaceId) return;
 
     // Connect to FastAPI backend
     const newSocket = io(apiUrl, {
@@ -194,7 +195,7 @@ export default function Home() {
 
     newSocket.on("connect", () => {
       console.log("Connected to WebSocket");
-      newSocket.emit("join_workspace", { workspace_id: activeWorkspace.id, token: localStorage.getItem("token") || "" });
+      newSocket.emit("join_workspace", { workspace_id: activeWorkspaceId, token: localStorage.getItem("token") || "" });
     });
 
     newSocket.on("message", (data) => {
@@ -210,7 +211,7 @@ export default function Home() {
     return () => {
       newSocket.close();
     };
-  }, [apiUrl, activeWorkspace, activeWorkspace?.id]);
+  }, [apiUrl, activeWorkspace?.id]);
 
   // ⚡ Bolt Optimization: Wrap event handler in useCallback so its reference remains stable.
   // This prevents the memoized MessageInput from re-rendering needlessly.
