@@ -54,7 +54,6 @@ class SyncTokenRequest(BaseModel):
     provider: str = Field(..., min_length=1, max_length=50)
     token: str = Field(..., min_length=1, max_length=4000)
     agent_id: uuid.UUID
-    owner_id: uuid.UUID | None = None
 
 import hmac
 from typing import Any
@@ -81,13 +80,13 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
 
     agent, pool_entry = result
 
-    owner_id = req.owner_id or agent.owner_id
-
     encrypted = encrypt_token(req.token)
     if pool_entry:
         pool_entry.encrypted_session_token = encrypted
     else:
-        pool_entry = TokenPool(agent_id=agent.id, owner_user_id=owner_id, encrypted_session_token=encrypted)
+        # 🛡️ Sentinel: Fix IDOR vulnerability by always using the agent's actual owner_id
+        # instead of trusting an unvalidated owner_id from the client request.
+        pool_entry = TokenPool(agent_id=agent.id, owner_user_id=agent.owner_id, encrypted_session_token=encrypted)
         session.add(pool_entry)
 
     try:
