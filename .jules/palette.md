@@ -37,3 +37,6 @@
 ## 2024-06-04 - Decorative Icons and Truncated Secondary Text
 **Learning:** Purely decorative icons (like `Users`, `Bot`, `Hash`, `MessageSquare`, etc.) inside interactive elements (like buttons or links) or general layout containers can cause redundant or confusing announcements for screen reader users. Also, secondary text (like a provider name) that gets truncated by CSS loses its meaning if it is not discoverable.
 **Action:** Always add `aria-hidden="true"` to purely decorative icons to prevent screen readers from announcing them unnecessarily, especially when they are accompanied by visible text or semantic labels. Additionally, always add a `title` attribute to any secondary text that relies on CSS truncation to ensure users can hover to discover the full context.
+## 2025-05-15 - Visual Keyboard Shortcut Hints vs Screen Readers
+**Learning:** When adding visual `<kbd>` elements to show keyboard shortcuts within or overlaid on an input field, screen readers will announce the hint redundantly and sometimes confusingly (e.g. announcing "slash" out of context) if the input itself correctly uses the `aria-keyshortcuts` attribute.
+**Action:** Always add `aria-hidden="true"` to decorative/visual keyboard shortcut hints, and rely on `aria-keyshortcuts` on the actual interactive element to communicate the shortcut to assistive technologies.

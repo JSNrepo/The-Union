@@ -18,7 +18,7 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-medium text-sm">User</span>
-          <span className="text-xs text-neutral-500">Just now</span>
+          <time className="text-xs text-neutral-500">Just now</time>
         </div>
         <p className="text-neutral-300 mt-1 whitespace-pre-wrap break-words">{msg}</p>
       </div>
@@ -107,10 +107,11 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600"
         disabled={disabled}
         aria-label="Message input"
+        aria-keyshortcuts="/"
       />
       <div className="absolute right-12 flex items-center pointer-events-none">
         {!disabled && !message && (
-          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500 opacity-100">
+          <kbd aria-hidden="true" className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500 opacity-100">
             <span className="text-xs">/</span>
           </kbd>
         )}
