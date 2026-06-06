@@ -102,15 +102,17 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
 async def connect(sid: str, environ: dict) -> None:
     print(f"Client connected: {sid}")
 
-def verify_ws_auth_sync(workspace_id: str, token: str) -> bool:
+def verify_ws_auth_sync(workspace_id: str, token: str) -> uuid.UUID | None:
     try:
         ws_uuid = uuid.UUID(workspace_id)
         user_uuid = uuid.UUID(jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]).get("sub"))
         with Session(engine) as session:
-            return session.get(UserWorkspaceLink, (user_uuid, ws_uuid)) is not None
-    except (jwt.PyJWTError, ValueError, TypeError, AttributeError) as e:
-        print(f"WebSocket auth error: {e}")
-        return False
+            if session.get(UserWorkspaceLink, (user_uuid, ws_uuid)) is not None:
+                return user_uuid
+            return None
+    except (jwt.PyJWTError, ValueError, TypeError, AttributeError):
+        print("WebSocket auth error: Invalid token or workspace ID")
+        return None
 
 @sio.event
 async def join_workspace(sid: str, data: dict) -> None:
@@ -122,12 +124,15 @@ async def join_workspace(sid: str, data: dict) -> None:
     if not isinstance(workspace_id, str) or len(workspace_id) > 100 or not isinstance(token, str):
         return
 
-    if not await asyncio.to_thread(verify_ws_auth_sync, workspace_id, token): return
+    user_uuid = await asyncio.to_thread(verify_ws_auth_sync, workspace_id, token)
+    if user_uuid is None:
+        return
 
     async with sio.session(sid) as session:
         auth_workspaces = session.get('workspaces', set())
         auth_workspaces.add(workspace_id)
         session['workspaces'] = auth_workspaces
+        session['user_id'] = str(user_uuid)
 
     await sio.enter_room(sid, workspace_id)
     await sio.emit('message', {'msg': f'Someone joined {workspace_id}'}, room=workspace_id)
@@ -209,11 +214,13 @@ async def chat_message(sid: str, data: dict) -> None:
         def fetch_agent_infos() -> list[dict[str, Any]]:
             infos = []
             with Session(engine) as session:
+                # 🛡️ Sentinel: Fix IDOR by securely scoping agent lookups. Agents without a workspace
+                # can only be queried if the authenticated user is their owner.
                 results = session.exec(
                     select(Agent, TokenPool)
                     .join(TokenPool, isouter=True)
                     .where(col(Agent.name).in_(agent_names))
-                    .where((Agent.workspace_id == ws_uuid) | col(Agent.workspace_id).is_(None))
+                    .where((Agent.workspace_id == ws_uuid) | ((col(Agent.workspace_id).is_(None)) & (Agent.owner_id == uuid.UUID(session_data.get('user_id')))))
                 ).all()
 
                 for agent, pool_entry in results:

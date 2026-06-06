@@ -21,7 +21,7 @@ def test_verify_ws_auth_sync_success():
     token = create_access_token({"sub": str(user_uuid)})
 
     with patch('app.main.engine', test_engine):
-        assert verify_ws_auth_sync(str(ws_uuid), token) == True
+        assert verify_ws_auth_sync(str(ws_uuid), token) is not None
 
 def test_verify_ws_auth_sync_not_found():
     test_engine = create_engine("sqlite://")
@@ -33,9 +33,9 @@ def test_verify_ws_auth_sync_not_found():
     token = create_access_token({"sub": str(user_uuid)})
 
     with patch('app.main.engine', test_engine):
-        assert verify_ws_auth_sync(str(ws_uuid), token) == False
+        assert verify_ws_auth_sync(str(ws_uuid), token) is None
 
 def test_verify_ws_auth_sync_exception():
     token = create_access_token({"sub": str(uuid.uuid4())})
     # invalid uuid will trigger ValueError inside try block
-    assert verify_ws_auth_sync("not-a-uuid", token) == False
+    assert verify_ws_auth_sync("not-a-uuid", token) is None
