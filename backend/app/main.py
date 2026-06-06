@@ -213,7 +213,7 @@ async def chat_message(sid: str, data: dict) -> None:
                     select(Agent, TokenPool)
                     .join(TokenPool, isouter=True)
                     .where(col(Agent.name).in_(agent_names))
-                    .where(Agent.workspace_id == ws_uuid)
+                    .where((Agent.workspace_id == ws_uuid) | col(Agent.workspace_id).is_(None))
                 ).all()
 
                 for agent, pool_entry in results:
