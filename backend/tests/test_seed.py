@@ -55,3 +55,18 @@ def test_seed_idempotent():
             # Check agents
             agents = session.exec(select(Agent)).all()
             assert len(agents) == 2
+
+def test_seed_main_execution():
+    import runpy
+    test_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+    SQLModel.metadata.create_all(test_engine)
+
+    # When runpy.run_module executes "seed.py", it re-imports app.database.engine.
+    # Patching "seed.engine" here only patches it in the *already imported* seed module.
+    # We need to patch "app.database.engine" so when the fresh module imports it, it gets the mock.
+    with patch("app.database.engine", test_engine):
+        runpy.run_module("seed", run_name="__main__")
+
+        # Verify the seed actually ran by checking the database contents
+        with Session(test_engine) as session:
+            assert session.exec(select(User).where(User.username == "admin")).first() is not None
