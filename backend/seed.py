@@ -10,7 +10,7 @@ from app.models import Workspace, Agent, User
 from app.auth import get_password_hash
 import uuid
 
-def seed():
+def seed() -> None:
     with Session(engine) as session:
         # Check if user exists
         user = session.exec(select(User).where(User.username == "admin")).first()
