@@ -5,7 +5,8 @@ import uuid
 
 @pytest.fixture(autouse=True)
 def mock_ws_auth():
-    with patch('app.main.verify_ws_auth_sync', return_value=True), \
+    mock_user_uuid = uuid.uuid4()
+    with patch('app.main.verify_ws_auth_sync', return_value=mock_user_uuid), \
          patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session, \
          patch.object(sio, 'session') as mock_session:
         class UniversalSet(set):
@@ -14,13 +15,13 @@ def mock_ws_auth():
             def add(self, item):
                 pass
 
-        mock_get_session.return_value = {'workspaces': UniversalSet()}
+        mock_get_session.return_value = {'workspaces': UniversalSet(), 'user_id': str(mock_user_uuid)}
 
         # We need a proper context manager mock for sio.session
         class MockSessionContext:
             def __init__(self, sid):
                 self.sid = sid
-                self.data = {'workspaces': UniversalSet()}
+                self.data = {'workspaces': UniversalSet(), 'user_id': str(mock_user_uuid)}
             async def __aenter__(self):
                 return self.data
             async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -199,7 +200,13 @@ async def test_chat_message_invalid_data():
 async def test_chat_message_mention_without_valid_agents():
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
-         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call:
+         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+        mock_db.exec.return_value.all.return_value = []
 
         # Test string with just "@" but no agent name attached
         await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @ everyone'})
@@ -213,7 +220,14 @@ async def test_chat_message_mention_without_valid_agents():
 @pytest.mark.anyio
 async def test_chat_message_mention_agent_no_names_empty():
     ws_id = str(uuid.uuid4())
-    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+        mock_db.exec.return_value.all.return_value = []
+
         await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'hello@world'})
         mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room=ws_id)
 
