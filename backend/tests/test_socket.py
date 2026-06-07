@@ -243,6 +243,28 @@ async def test_chat_message_mention_agent_no_names_empty():
         mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room=ws_id)
 
 @pytest.mark.anyio
+async def test_chat_message_mention_agent_invalid_user_id():
+    ws_id = str(uuid.uuid4())
+    # Override get_session to return an invalid user_id
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session, \
+         patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call:
+
+        class UniversalSet(set):
+            def __contains__(self, item):
+                return True
+            def add(self, item):
+                pass
+
+        mock_get_session.return_value = {'workspaces': UniversalSet(), 'user_id': 'invalid-uuid'}
+
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @TestAgent'})
+
+        # Message is emitted, but agent proxying is skipped because of invalid user_id
+        mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello @TestAgent'}, room=ws_id)
+        mock_call.assert_not_called()
+
+@pytest.mark.anyio
 async def test_chat_message_unauthorized_workspace():
     ws_id = str(uuid.uuid4())
     # Note: the mock_get_session fixture from conftest returns a UniversalSet which contains everything
