@@ -213,6 +213,11 @@ async def chat_message(sid: str, data: dict) -> None:
         # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
         def fetch_agent_infos() -> list[dict[str, Any]]:
             infos = []
+            try:
+                user_uuid = uuid.UUID(session_data.get('user_id'))
+            except (ValueError, TypeError, AttributeError):
+                return []
+
             with Session(engine) as session:
                 # 🛡️ Sentinel: Fix IDOR by securely scoping agent lookups. Agents without a workspace
                 # can only be queried if the authenticated user is their owner.
@@ -220,7 +225,7 @@ async def chat_message(sid: str, data: dict) -> None:
                     select(Agent, TokenPool)
                     .join(TokenPool, isouter=True)
                     .where(col(Agent.name).in_(agent_names))
-                    .where((col(Agent.workspace_id) == ws_uuid) | ((col(Agent.workspace_id).is_(None)) & (col(Agent.owner_id) == uuid.UUID(session_data.get('user_id')))))
+                    .where((col(Agent.workspace_id) == ws_uuid) | ((col(Agent.workspace_id).is_(None)) & (col(Agent.owner_id) == user_uuid)))
                 ).all()
 
                 for agent, pool_entry in results:
