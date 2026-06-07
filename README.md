@@ -84,3 +84,8 @@ To prevent generic, unhelpful empty states ("No Workspace Selected") from flashi
 To improve user experience and clarity during network failures, generic error messages have been replaced with descriptive headers and actionable suggestions, alongside appropriate visual indicators.
 
 ![Actionable Error State](assets/verification_error_state.png)
+
+#### Contextual Message Actions
+To improve efficiency, a contextual "Copy" button has been added to message bubbles. The button appears gracefully on mouse hover and remains fully accessible via keyboard navigation, providing immediate visual feedback upon interaction.
+
+![Contextual Copy Button](assets/verification_copy_btn.png)

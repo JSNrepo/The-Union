@@ -40,3 +40,7 @@
 ## 2025-05-15 - Visual Keyboard Shortcut Hints vs Screen Readers
 **Learning:** When adding visual `<kbd>` elements to show keyboard shortcuts within or overlaid on an input field, screen readers will announce the hint redundantly and sometimes confusingly (e.g. announcing "slash" out of context) if the input itself correctly uses the `aria-keyshortcuts` attribute.
 **Action:** Always add `aria-hidden="true"` to decorative/visual keyboard shortcut hints, and rely on `aria-keyshortcuts` on the actual interactive element to communicate the shortcut to assistive technologies.
+
+## 2024-06-07 - Contextual Hover Actions and Keyboard Accessibility
+**Learning:** Adding contextual actions (like a "Copy message" button) that only appear on hover (`group-hover:opacity-100`) creates a cleaner UI, but completely breaks keyboard accessibility if keyboard users cannot focus and interact with the hidden button.
+**Action:** Always pair `group-hover:opacity-100` with `focus-visible:opacity-100` to ensure interactive elements are discoverable and usable via keyboard navigation.

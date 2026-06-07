@@ -4,23 +4,48 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send, AlertTriangle } from "lucide-react";
+import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send, AlertTriangle, Copy, Check } from "lucide-react";
 
 // ⚡ Bolt Optimization: Extract individual message item into a memoized component.
 // When a new message is appended to the list, React will reuse the rendered output
 // of existing messages instead of re-rendering all of them, changing O(N) to O(1).
 const MessageItem = React.memo(({ msg }: { msg: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(msg).catch((err) => {
+      console.error("Failed to copy message: ", err);
+    });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="flex items-start gap-4">
+    <div className="group relative flex items-start gap-4">
       <div className="w-8 h-8 rounded bg-neutral-800 flex items-center justify-center shrink-0">
         <Users className="w-4 h-4 text-neutral-400" aria-hidden="true" />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 relative pr-10">
         <div className="flex items-baseline gap-2">
           <span className="font-medium text-sm">User</span>
           <time className="text-xs text-neutral-500">Just now</time>
         </div>
         <p className="text-neutral-300 mt-1 whitespace-pre-wrap break-words">{msg}</p>
+
+        <Button
+          onClick={handleCopy}
+          variant="ghost"
+          size="icon"
+          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+          aria-label={copied ? "Copied" : "Copy message"}
+          title={copied ? "Copied" : "Copy message"}
+        >
+          {copied ? (
+            <Check className="w-4 h-4 text-green-500" aria-hidden="true" />
+          ) : (
+            <Copy className="w-4 h-4" aria-hidden="true" />
+          )}
+        </Button>
       </div>
     </div>
   );
