@@ -176,6 +176,17 @@ async def test_join_workspace_invalid():
         await join_workspace('sid1', {'workspace_id': 'not-a-uuid'})
         mock_enter.assert_not_called()
 
+
+@pytest.mark.anyio
+async def test_join_workspace_unauthorized():
+    ws_id = str(uuid.uuid4())
+    with patch('app.main.verify_ws_auth_sync', return_value=None), \
+         patch.object(sio, 'enter_room') as mock_enter, \
+         patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
+        await join_workspace('sid1', {'workspace_id': ws_id, 'token': 'mock'})
+        mock_enter.assert_not_called()
+        mock_emit.assert_not_called()
+
 @pytest.mark.anyio
 async def test_chat_message_invalid_data():
     ws_id = str(uuid.uuid4())
