@@ -4,7 +4,7 @@ from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
 from .database import create_db_and_tables, get_session, engine
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
-from .auth import get_password_hash, verify_password, create_access_token, get_current_user, SECRET_KEY, ALGORITHM
+from .auth import get_password_hash, verify_password, create_access_token, get_current_user, get_current_user_id, SECRET_KEY, ALGORITHM
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -295,19 +295,19 @@ def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_sessio
     return ws
 
 @app.get("/workspaces")
-def list_workspaces(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Workspace]:
+def list_workspaces(session: Session = Depends(get_session), current_user_id: uuid.UUID = Depends(get_current_user_id)) -> list[Workspace]:
     # 🛡️ Sentinel: Fix authorization bypass to only return user's workspaces
     workspaces = session.exec(
         select(Workspace)
         .join(UserWorkspaceLink)
-        .where(UserWorkspaceLink.user_id == current_user.id)
+        .where(UserWorkspaceLink.user_id == current_user_id)
     ).all()
     return list(workspaces)
 
 @app.get("/agents")
-def list_agents(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> list[Agent]:
+def list_agents(session: Session = Depends(get_session), current_user_id: uuid.UUID = Depends(get_current_user_id)) -> list[Agent]:
     # 🛡️ Sentinel: Fix authorization bypass to only return user's agents
-    agents = session.exec(select(Agent).where(Agent.owner_id == current_user.id)).all()
+    agents = session.exec(select(Agent).where(Agent.owner_id == current_user_id)).all()
     return list(agents)
 
 # Mount socket app
@@ -331,7 +331,7 @@ class ProxyRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=5000)
 
 @app.post("/proxy-request")
-async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> dict[str, str]:
+async def proxy_request(req: ProxyRequest, session: Session = Depends(get_session), current_user_id: uuid.UUID = Depends(get_current_user_id)) -> dict[str, str]:
     # ⚡ Bolt Optimization: Move synchronous database operations and CPU-bound decryption
     # to a separate thread using asyncio.to_thread to prevent blocking the ASGI event loop.
     def fetch_agent_data() -> dict[str, Any]:
@@ -348,7 +348,7 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
 
         agent, pool_entry = result
 
-        if agent.owner_id != current_user.id:
+        if agent.owner_id != current_user_id:
             raise HTTPException(status_code=403, detail="Not authorized to access this agent")
 
         if not pool_entry:
