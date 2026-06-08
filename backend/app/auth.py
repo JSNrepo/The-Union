@@ -36,7 +36,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)) -> User:
+def get_current_user_id(token: str = Depends(oauth2_scheme)) -> uuid.UUID:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -53,7 +53,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Dep
         user_uuid = uuid.UUID(user_id)
     except (ValueError, TypeError, AttributeError):
         raise credentials_exception
-    user = session.get(User, user_uuid)
+    return user_uuid
+
+def get_current_user(user_id: uuid.UUID = Depends(get_current_user_id), session: Session = Depends(get_session)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    user = session.get(User, user_id)
     if user is None:
         raise credentials_exception
     return user

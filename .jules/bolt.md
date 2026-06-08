@@ -50,3 +50,6 @@
 ## 2026-06-05 - [Unnecessary WebSocket Reconnections]
 **Learning:** Including an entire object reference (like `activeWorkspace`) instead of its primitive identity (like `activeWorkspace?.id`) in the dependency array of a `useEffect` that manages expensive connections (like WebSockets) causes the connection to be needlessly destroyed and recreated whenever the object reference changes, even if the underlying identity (ID) remains the same.
 **Action:** Extract the specific primitive properties needed for side effects and use only those primitives in the dependency array to prevent unnecessary teardowns and reconnections.
+## 2024-11-20 - Skip loading User model from DB on JWT endpoints
+**Learning:** By default, FastAPIs auth dependency `get_current_user` extracts the JWT token, decodes it, and *then* fetches the `User` object from the database. When an endpoint only needs the user's ID to filter other tables (like `Workspace` or `Agent`), this results in an unnecessary extra database query that slows down API response times.
+**Action:** Extract a `get_current_user_id` dependency that returns the `uuid.UUID` purely from the decoded JWT payload. Use this dependency instead of `get_current_user` for endpoints that only need to filter by owner ID to eliminate a redundant SQL query.
