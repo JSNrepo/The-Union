@@ -89,3 +89,9 @@ To improve user experience and clarity during network failures, generic error me
 To improve efficiency, a contextual "Copy" button has been added to message bubbles. The button appears gracefully on mouse hover and remains fully accessible via keyboard navigation, providing immediate visual feedback upon interaction.
 
 ![Contextual Copy Button](assets/verification_copy_btn.png)
+
+#### Accessible Keyboard Shortcuts and Scrolling
+To streamline navigation without compromising a clean UI, visual keyboard shortcut hints elegantly fade out when the input is focused, reducing visual clutter. Additionally, the primary message container now supports keyboard-native scrolling with an explicit `tabIndex={0}`, enhancing accessibility for non-mouse users without adding disruptive outlines until explicitly focused.
+
+![Message History Focus](assets/message_history_focus.png)
+[![Keyboard Hint Demo](assets/input_focus.png)](assets/ux_demo.webm)

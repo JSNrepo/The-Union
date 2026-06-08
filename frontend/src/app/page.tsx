@@ -129,12 +129,12 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleInputKeyDown}
         placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : "Message @agents or team..."}
-        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600"
+        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600 peer"
         disabled={disabled}
         aria-label="Message input"
         aria-keyshortcuts="/"
       />
-      <div className="absolute right-12 flex items-center pointer-events-none">
+      <div className="absolute right-12 flex items-center pointer-events-none peer-focus:opacity-0 transition-opacity duration-200">
         {!disabled && !message && (
           <kbd aria-hidden="true" className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500 opacity-100">
             <span className="text-xs">/</span>
@@ -350,7 +350,7 @@ export default function Home() {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col" role="log" aria-live="polite">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 focus-visible:ring-inset" role="log" aria-live="polite" aria-label="Message history" tabIndex={0}>
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
               <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" aria-hidden="true" />
