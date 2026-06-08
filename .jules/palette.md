@@ -44,3 +44,7 @@
 ## 2024-06-07 - Contextual Hover Actions and Keyboard Accessibility
 **Learning:** Adding contextual actions (like a "Copy message" button) that only appear on hover (`group-hover:opacity-100`) creates a cleaner UI, but completely breaks keyboard accessibility if keyboard users cannot focus and interact with the hidden button.
 **Action:** Always pair `group-hover:opacity-100` with `focus-visible:opacity-100` to ensure interactive elements are discoverable and usable via keyboard navigation.
+
+## 2026-06-08 - Keyboard-Accessible Scrolling and Visual Hint Visibility
+**Learning:** Large scrollable areas (like chat histories) are often inaccessible to keyboard-only users if they lack a `tabIndex`. Additionally, permanent visual shortcut hints (like `<kbd>/`</kbd>) can add visual clutter once the user has already initiated the action and focused the input field.
+**Action:** Always add `tabIndex={0}`, an appropriate `aria-label`, and `focus-visible` styles to primary scrollable containers to ensure keyboard accessibility. Use Tailwind's `peer` and `peer-focus:opacity-0` utilities to gracefully hide instructional hints once the associated input is focused, maintaining a clean UI during interaction.
