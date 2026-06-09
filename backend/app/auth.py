@@ -26,6 +26,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+# 🛡️ Sentinel: Precomputed dummy hash to mitigate timing attacks against the login endpoint
+DUMMY_HASH = get_password_hash("dummy")
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
