@@ -95,3 +95,9 @@ To streamline navigation without compromising a clean UI, visual keyboard shortc
 
 ![Message History Focus](assets/message_history_focus.png)
 [![Keyboard Hint Demo](assets/input_focus.png)](assets/ux_demo.webm)
+
+#### Dynamic Contextual Keyboard Hints
+To improve discoverability without cluttering the initial empty state, the global shortcut hint (like `/`) gracefully swaps to a functional action hint ("Enter ↵") dynamically as the user interacts with the input and types text.
+
+![Contextual Keyboard Hint](assets/verification_enter_hint.png)
+[![Dynamic Keyboard Hint Demo](assets/verification_enter_hint.png)](assets/verification_enter_hint_demo.webm)

@@ -48,3 +48,7 @@
 ## 2026-06-08 - Keyboard-Accessible Scrolling and Visual Hint Visibility
 **Learning:** Large scrollable areas (like chat histories) are often inaccessible to keyboard-only users if they lack a `tabIndex`. Additionally, permanent visual shortcut hints (like `<kbd>/`</kbd>) can add visual clutter once the user has already initiated the action and focused the input field.
 **Action:** Always add `tabIndex={0}`, an appropriate `aria-label`, and `focus-visible` styles to primary scrollable containers to ensure keyboard accessibility. Use Tailwind's `peer` and `peer-focus:opacity-0` utilities to gracefully hide instructional hints once the associated input is focused, maintaining a clean UI during interaction.
+
+## 2024-06-09 - Dynamic Contextual Keyboard Hints
+**Learning:** While empty input states often include a global shortcut hint (like `/`), adding functional action hints (like "Enter ↵" to send) that only appear when the input has content provides excellent discoverability without cluttering the empty state.
+**Action:** Use conditional rendering and Tailwind's peer focus utilities to swap static hints (like `/`) for action hints (like "Enter ↵") dynamically as the user interacts with the input and types text.

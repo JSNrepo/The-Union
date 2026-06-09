@@ -134,13 +134,16 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         aria-label="Message input"
         aria-keyshortcuts="/"
       />
-      <div className="absolute right-12 flex items-center pointer-events-none peer-focus:opacity-0 transition-opacity duration-200">
-        {!disabled && !message && (
-          <kbd aria-hidden="true" className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500 opacity-100">
-            <span className="text-xs">/</span>
-          </kbd>
-        )}
-      </div>
+      {!disabled && !message && (
+        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none peer-focus:opacity-0 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500">
+          <span className="text-xs">/</span>
+        </kbd>
+      )}
+      {!disabled && message.trim() && (
+        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none opacity-0 peer-focus:opacity-100 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500">
+          Enter ↵
+        </kbd>
+      )}
       <Button
         type="submit"
         size="icon"
