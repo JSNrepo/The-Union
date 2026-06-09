@@ -4,7 +4,7 @@ from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
 from .database import create_db_and_tables, get_session, engine
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
-from .auth import get_password_hash, verify_password, create_access_token, get_current_user, get_current_user_id, SECRET_KEY, ALGORITHM
+from .auth import get_password_hash, verify_password, create_access_token, get_current_user, get_current_user_id, SECRET_KEY, ALGORITHM, DUMMY_HASH
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -320,7 +320,14 @@ class LoginRequest(BaseModel):
 @app.post("/login")
 def login(req: LoginRequest, session: Session = Depends(get_session)) -> dict[str, str]:
     user = session.exec(select(User).where(User.username == req.username)).first()
-    if not user or not verify_password(req.password, user.hashed_password):
+
+    if not user:
+        # 🛡️ Sentinel: Mitigate timing attacks by performing a dummy hash verification
+        # to ensure the response time is indistinguishable from a valid user lookup
+        verify_password(req.password, DUMMY_HASH)
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    if not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     access_token = create_access_token(data={"sub": str(user.id)})
