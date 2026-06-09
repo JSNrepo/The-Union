@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
 from contextlib import asynccontextmanager
 from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
@@ -32,6 +32,17 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127
 # This significantly reduces payload sizes for large API responses (like workspace/agent lists),
 # lowering bandwidth usage and improving load times over slow networks.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# 🛡️ Sentinel: Add security headers middleware to defend against clickjacking,
+# MIME-sniffing, and XSS attacks, and to enforce HTTPS connections.
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 app.add_middleware(
     CORSMiddleware,
