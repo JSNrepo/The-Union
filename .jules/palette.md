@@ -52,3 +52,6 @@
 ## 2024-06-09 - Dynamic Contextual Keyboard Hints
 **Learning:** While empty input states often include a global shortcut hint (like `/`), adding functional action hints (like "Enter ↵" to send) that only appear when the input has content provides excellent discoverability without cluttering the empty state.
 **Action:** Use conditional rendering and Tailwind's peer focus utilities to swap static hints (like `/`) for action hints (like "Enter ↵") dynamically as the user interacts with the input and types text.
+## 2024-05-18 - Actionable Error States
+**Learning:** Generic error messages leave users frustrated and stuck, especially during network failures.
+**Action:** When designing error states, always include explicit, actionable next steps (like a "Try Again" button) and semantic visual indicators rather than just stating the error.
