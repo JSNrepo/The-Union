@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Header, Request, Response
 from contextlib import asynccontextmanager
 from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +13,7 @@ import socketio
 import os
 import asyncio
 import uuid
-from typing import AsyncIterator, Any
+from typing import AsyncIterator, Any, Callable, Awaitable
 import httpx
 import jwt
 
@@ -36,7 +36,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # 🛡️ Sentinel: Add security headers middleware to defend against clickjacking,
 # MIME-sniffing, and XSS attacks, and to enforce HTTPS connections.
 @app.middleware("http")
-async def add_security_headers(request: Request, call_next):
+async def add_security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
