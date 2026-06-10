@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send, AlertTriangle, Copy, Check } from "lucide-react";
+import { MessageSquare, Users, Settings, Hash, Bot, Loader2, Send, AlertTriangle, Copy, Check, RefreshCw } from "lucide-react";
 
 // ⚡ Bolt Optimization: Extract individual message item into a memoized component.
 // When a new message is appended to the list, React will reuse the rendered output
@@ -364,10 +364,20 @@ export default function Home() {
               <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-red-500" aria-hidden="true" />
               </div>
-              <div className="text-center max-w-md">
-                <p className="text-lg font-medium" role="alert">Connection Error</p>
-                <p className="text-sm text-red-400 mb-2">{error}</p>
-                <p className="text-sm text-neutral-400">Please check your network connection or try refreshing the page.</p>
+              <div className="text-center max-w-md space-y-4">
+                <div>
+                  <p className="text-lg font-medium" role="alert">Connection Error</p>
+                  <p className="text-sm text-red-400 mb-2">{error}</p>
+                  <p className="text-sm text-neutral-400">Please check your network connection or try refreshing the page.</p>
+                </div>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className="border-neutral-700 bg-transparent text-neutral-300 hover:text-white hover:bg-neutral-800"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Try Again
+                </Button>
               </div>
             </div>
           ) : !activeWorkspace ? (
