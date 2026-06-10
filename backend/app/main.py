@@ -4,7 +4,7 @@ from sqlmodel import Session, select, col
 from sqlalchemy.exc import IntegrityError
 from .database import create_db_and_tables, get_session, engine
 from .models import User, TokenPool, Agent, Workspace, UserWorkspaceLink
-from .auth import get_password_hash, verify_password, create_access_token, get_current_user, get_current_user_id, SECRET_KEY, ALGORITHM, DUMMY_HASH
+from .auth import get_password_hash, verify_password, create_access_token, get_current_user_id, SECRET_KEY, ALGORITHM, DUMMY_HASH
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -293,11 +293,16 @@ class WorkspaceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
 
 @app.post("/workspaces")
-def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)) -> Workspace:
+def create_workspace(req: WorkspaceCreate, session: Session = Depends(get_session), current_user_id: uuid.UUID = Depends(get_current_user_id)) -> Workspace:
     ws = Workspace(name=req.name)
-    ws.members.append(current_user)
     session.add(ws)
     try:
+        session.flush()
+        # ⚡ Bolt Optimization: Manually create the UserWorkspaceLink using the current_user_id
+        # extracted directly from the JWT. This eliminates a redundant database query to fetch
+        # the entire User object, improving endpoint response time.
+        link = UserWorkspaceLink(user_id=current_user_id, workspace_id=ws.id)
+        session.add(link)
         session.commit()
     except IntegrityError:
         session.rollback()
