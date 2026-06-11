@@ -55,3 +55,7 @@
 ## 2024-05-18 - Actionable Error States
 **Learning:** Generic error messages leave users frustrated and stuck, especially during network failures.
 **Action:** When designing error states, always include explicit, actionable next steps (like a "Try Again" button) and semantic visual indicators rather than just stating the error.
+
+## 2024-06-10 - Semantic HTML for Non-Interactive List Items
+**Learning:** Using `<button>` elements for list items that are purely informational (read-only) and perform no action creates false expectations for screen reader users and adds confusing focus states for keyboard users.
+**Action:** Always use semantic `<div>` or `<li>` elements for non-interactive list items instead of `<button>`, and avoid adding focus utilities (`focus:outline-none focus-visible:ring-2`) or cursor pointer classes if the element does not perform a direct action or navigation.
