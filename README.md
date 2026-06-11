@@ -101,3 +101,8 @@ To improve discoverability without cluttering the initial empty state, the globa
 
 ![Contextual Keyboard Hint](assets/verification_enter_hint.png)
 [![Dynamic Keyboard Hint Demo](assets/verification_enter_hint.png)](assets/verification_enter_hint_demo.webm)
+
+#### Semantic Non-Interactive Lists
+To prevent confusing keyboard navigation and screen reader announcements, read-only informational items (like the AI Pool agent roster) now use semantic `<div>` elements rather than `<button>` tags, removing misleading interactive states while preserving discoverable hover styling.
+
+![Semantic List Structure](assets/aipool_semantic_div.png)
