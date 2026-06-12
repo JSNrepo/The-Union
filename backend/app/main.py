@@ -258,7 +258,7 @@ async def chat_message(sid: str, data: dict) -> None:
                     ai_response = await call_provider_api(agent_info["provider"], agent_info["token"], message)
                     await sio.emit('chat_update', {'msg': ai_response}, room=workspace_id)
                 except Exception as e:
-                    print(f"Error calling provider for agent {agent_info['name']}: {str(e)}") # Secure logging
+                    print(f"Error calling provider for agent {agent_info['name']}: {type(e).__name__}") # Secure logging
                     await sio.emit('chat_update', {'msg': f"An error occurred while processing your request with {agent_info['name']}."}, room=workspace_id)
 
         if agent_infos:
@@ -402,5 +402,5 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
         response_text = await call_provider_api(provider, token, req.prompt)
         return {"response": response_text}
     except Exception as e:
-        print(f"Proxy request error for agent {agent_id}: {str(e)}") # Secure logging
+        print(f"Proxy request error for agent {agent_id}: {type(e).__name__}") # Secure logging
         raise HTTPException(status_code=500, detail="An internal error occurred while communicating with the AI provider.")
