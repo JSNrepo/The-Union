@@ -213,6 +213,12 @@ export default function Home() {
   }, [apiUrl]);
 
   useEffect(() => {
+    if (activeWorkspace) {
+      document.title = `${activeWorkspace.name} | The Union`;
+    }
+  }, [activeWorkspace]);
+
+  useEffect(() => {
     const activeWorkspaceId = activeWorkspace?.id;
     if (!activeWorkspaceId) return;
 
