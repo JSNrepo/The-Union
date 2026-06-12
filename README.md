@@ -106,3 +106,8 @@ To improve discoverability without cluttering the initial empty state, the globa
 To prevent confusing keyboard navigation and screen reader announcements, read-only informational items (like the AI Pool agent roster) now use semantic `<div>` elements rather than `<button>` tags, removing misleading interactive states while preserving discoverable hover styling.
 
 ![Semantic List Structure](assets/aipool_semantic_div.png)
+
+#### Dynamic Document Title Context
+To ensure proper context is maintained when navigating multiple browser tabs and for screen reader users switching windows, the document title now dynamically updates to reflect the currently active workspace.
+
+![Dynamic Document Title](assets/dynamic_document_title.png)

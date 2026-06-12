@@ -59,3 +59,7 @@
 ## 2024-06-10 - Semantic HTML for Non-Interactive List Items
 **Learning:** Using `<button>` elements for list items that are purely informational (read-only) and perform no action creates false expectations for screen reader users and adds confusing focus states for keyboard users.
 **Action:** Always use semantic `<div>` or `<li>` elements for non-interactive list items instead of `<button>`, and avoid adding focus utilities (`focus:outline-none focus-visible:ring-2`) or cursor pointer classes if the element does not perform a direct action or navigation.
+
+## 2024-06-12 - Dynamic Document Title Context
+**Learning:** In Single Page Applications, relying solely on internal state for navigation means the browser tab title remains static. This deprives users navigating multiple tabs and screen reader users switching windows of critical context about which workspace or room they are currently in.
+**Action:** Always dynamically update `document.title` to reflect the active primary context (e.g., active workspace or room) to improve external discoverability and accessibility context.
