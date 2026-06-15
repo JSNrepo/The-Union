@@ -180,6 +180,58 @@ def test_sync_token_agent_not_found(client: TestClient):
     assert response.json() == {"detail": "Agent not found"}
 
 
+def test_sync_token_update_existing(client: TestClient):
+    client.post("/register", json={"username": "syncuser_update", "password": "password"})
+    login_response = client.post("/login", json={"username": "syncuser_update", "password": "password"})
+    token = login_response.json()["access_token"]
+
+    from app.main import get_session
+    from app.models import Agent, User, TokenPool
+    from sqlmodel import select
+    from app.encryption import decrypt_token
+
+    with next(get_session_override()) as session:
+        user = session.exec(select(User).where(User.username == "syncuser_update")).first()
+        assert user is not None
+        user_id = user.id
+        agent_id = uuid.uuid4()
+        agent = Agent(id=agent_id, name="TestAgentUpdate", owner_id=user_id, provider="openai")
+        session.add(agent)
+        session.commit()
+
+    ext_api_key = os.getenv("EXTENSION_API_KEY")
+    assert ext_api_key is not None
+    sync_headers = {"x-api-key": ext_api_key}
+
+    # First sync to create the token pool entry
+    sync_data_create = {
+        "provider": "openai",
+        "token": "initial-secret-token",
+        "agent_id": str(agent_id),
+    }
+
+    response_create = client.post("/sync-token", json=sync_data_create, headers=sync_headers)
+    assert response_create.status_code == 200
+    assert response_create.json() == {"status": "success"}
+
+    # Second sync to update the existing token pool entry
+    sync_data_update = {
+        "provider": "openai",
+        "token": "updated-secret-token",
+        "agent_id": str(agent_id),
+    }
+
+    response_update = client.post("/sync-token", json=sync_data_update, headers=sync_headers)
+    assert response_update.status_code == 200
+    assert response_update.json() == {"status": "success"}
+
+    # Verify the token was actually updated
+    with next(get_session_override()) as session:
+        pool_entry = session.exec(select(TokenPool).where(TokenPool.agent_id == agent_id)).first()
+        assert pool_entry is not None
+        decrypted_token = decrypt_token(pool_entry.encrypted_session_token)
+        assert decrypted_token == "updated-secret-token"
+
 def test_list_agents(client: TestClient):
     client.post("/register", json={"username": "agentuser", "password": "password"})
     login_response = client.post("/login", json={"username": "agentuser", "password": "password"})
