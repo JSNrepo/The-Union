@@ -49,3 +49,7 @@
 **Vulnerability:** The `/login` endpoint returned much faster when a user did not exist in the database because it skipped the computationally expensive `bcrypt` hash verification. This timing difference allowed attackers to enumerate valid usernames.
 **Learning:** Checking for user existence before verifying passwords creates a classic timing side-channel. Even a few hundred milliseconds of difference in response time is highly observable over a network and can reliably confirm whether a username is valid.
 **Prevention:** To prevent username enumeration via timing attacks on authentication endpoints (like `/login`), always execute the expensive password hash verification function (e.g., against a precomputed `DUMMY_HASH`) even if the user lookup fails, ensuring consistent response times regardless of the user's existence.
+## 2024-06-16 - Rate Limiting
+**Vulnerability:** Missing rate limiting on login endpoint
+**Learning:** Using an in-memory dictionary is an effective pattern for IP-based rate limiting on sensitive endpoints.
+**Prevention:** Apply rate limiting to all sensitive endpoints.
