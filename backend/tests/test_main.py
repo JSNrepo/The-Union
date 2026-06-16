@@ -1,3 +1,11 @@
+
+import pytest
+from app.main import login_attempts
+
+@pytest.fixture(autouse=True)
+def clear_login_attempts():
+    login_attempts.clear()
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
@@ -56,6 +64,17 @@ def test_login_nonexistent_user(client: TestClient):
     response = client.post("/login", json={"username": "nonexistent", "password": "password"})
     assert response.status_code == 400
     assert response.json() == {"detail": "Incorrect username or password"}
+
+def test_login_rate_limiting(client: TestClient):
+    # Attempt 5 failed logins
+    for _ in range(5):
+        response = client.post("/login", json={"username": "nonexistent", "password": "password"})
+        assert response.status_code == 400 or response.status_code == 429
+
+    # 6th attempt should be rate limited
+    response = client.post("/login", json={"username": "nonexistent", "password": "password"})
+    assert response.status_code == 429
+    assert response.json() == {"detail": "Too many login attempts"}
 
 def test_create_and_list_workspaces(client: TestClient):
     client.post("/register", json={"username": "wsuser", "password": "password"})

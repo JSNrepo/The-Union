@@ -16,6 +16,7 @@ import uuid
 from typing import AsyncIterator, Any, Callable, Awaitable
 import httpx
 import jwt
+import time
 
 
 @asynccontextmanager
@@ -333,17 +334,31 @@ class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
 
+# 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the login endpoint
+login_attempts: dict[str, list[float]] = {}
+
 @app.post("/login")
-def login(req: LoginRequest, session: Session = Depends(get_session)) -> dict[str, str]:
+def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)) -> dict[str, str]:
+    # 🛡️ Sentinel: Apply rate limiting to prevent brute-force attacks
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+
+    if client_ip in login_attempts:
+        login_attempts[client_ip] = [t for t in login_attempts[client_ip] if now - t < 900]
+        if len(login_attempts[client_ip]) >= 5:
+            raise HTTPException(status_code=429, detail="Too many login attempts")
+
     user = session.exec(select(User).where(User.username == req.username)).first()
 
     if not user:
         # 🛡️ Sentinel: Mitigate timing attacks by performing a dummy hash verification
         # to ensure the response time is indistinguishable from a valid user lookup
         verify_password(req.password, DUMMY_HASH)
+        login_attempts.setdefault(client_ip, []).append(time.time())
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     if not verify_password(req.password, user.hashed_password):
+        login_attempts.setdefault(client_ip, []).append(time.time())
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     access_token = create_access_token(data={"sub": str(user.id)})
