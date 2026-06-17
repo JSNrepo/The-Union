@@ -5,7 +5,7 @@ import httpx
 from unittest.mock import patch, MagicMock, AsyncMock
 
 @pytest.mark.anyio
-async def test_call_provider_api_openai():
+async def test_call_provider_api_openai() -> None:
     with patch('app.main.httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
         mock_response = MagicMock()
         mock_response.text = "This is a response from OpenAI"
@@ -21,7 +21,7 @@ async def test_call_provider_api_openai():
         assert kwargs["json"]["messages"][0]["content"]["parts"][0] == "Hello"
 
 @pytest.mark.anyio
-async def test_call_provider_api_claude():
+async def test_call_provider_api_claude() -> None:
     with patch('app.main.httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
         mock_response = MagicMock()
         mock_response.text = "This is a response from Claude"
@@ -36,7 +36,7 @@ async def test_call_provider_api_claude():
         assert kwargs["json"] == {"prompt": "Hi Claude"}
 
 @pytest.mark.anyio
-async def test_call_provider_api_gemini():
+async def test_call_provider_api_gemini() -> None:
     with patch('app.main.httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
         mock_response = MagicMock()
         mock_response.text = "This is a response from Gemini"
@@ -51,12 +51,12 @@ async def test_call_provider_api_gemini():
         assert kwargs["data"] == {"f.req": "Hi Gemini"}
 
 @pytest.mark.anyio
-async def test_call_provider_api_unsupported():
+async def test_call_provider_api_unsupported() -> None:
     with pytest.raises(Exception, match="Unsupported provider"):
         await call_provider_api('unknown', 'token', 'Hello')
 
 @pytest.mark.anyio
-async def test_call_provider_api_http_error():
+async def test_call_provider_api_http_error() -> None:
     with patch('app.main.httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("500 Internal Server Error", request=MagicMock(), response=MagicMock())
