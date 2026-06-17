@@ -1,10 +1,14 @@
 
 import pytest
-from app.main import login_attempts
+from app.main import login_attempts, register_attempts
 
 @pytest.fixture(autouse=True)
 def clear_login_attempts():
     login_attempts.clear()
+
+@pytest.fixture(autouse=True)
+def clear_register_attempts():
+    register_attempts.clear()
 
 import pytest
 from fastapi.testclient import TestClient
