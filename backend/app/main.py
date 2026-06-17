@@ -274,8 +274,22 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
 
+# 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the register endpoint
+register_attempts: dict[str, list[float]] = {}
+
 @app.post("/register")
-def register(user: UserCreate, session: Session = Depends(get_session)) -> dict[str, str]:
+def register(user: UserCreate, request: Request, session: Session = Depends(get_session)) -> dict[str, str]:
+    # 🛡️ Sentinel: Apply rate limiting to prevent DoS via expensive bcrypt operations
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+
+    if client_ip in register_attempts:
+        register_attempts[client_ip] = [t for t in register_attempts[client_ip] if now - t < 3600]
+        if len(register_attempts[client_ip]) >= 10:
+            raise HTTPException(status_code=429, detail="Too many registration attempts")
+
+    register_attempts.setdefault(client_ip, []).append(time.time())
+
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")

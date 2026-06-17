@@ -53,3 +53,7 @@
 **Vulnerability:** Missing rate limiting on login endpoint
 **Learning:** Using an in-memory dictionary is an effective pattern for IP-based rate limiting on sensitive endpoints.
 **Prevention:** Apply rate limiting to all sensitive endpoints.
+## 2026-06-17 - [Rate Limiting on Register Endpoint]
+**Vulnerability:** Missing rate limiting on the `/register` endpoint allowed attackers to perform a Denial of Service (DoS) attack by exhausting CPU resources via repeated expensive bcrypt password hashing operations.
+**Learning:** The `/register` endpoint is a sensitive endpoint that performs computationally heavy tasks. Even if the login endpoint is rate-limited, other unauthenticated endpoints like registration that consume significant resources can be exploited if left unprotected.
+**Prevention:** Apply rate limiting to all unauthenticated endpoints that perform expensive operations or are otherwise sensitive to prevent resource exhaustion and abuse.
