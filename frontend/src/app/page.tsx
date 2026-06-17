@@ -274,7 +274,7 @@ export default function Home() {
             <div className="space-y-1">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-8 bg-neutral-800/50 rounded-md animate-pulse"></div>
+                  <div key={i} className="h-8 bg-neutral-800/50 rounded-md animate-pulse"><span className="sr-only">Loading...</span></div>
                 ))
               ) : error ? (
                 <div className="text-sm text-red-500 px-2 py-1.5">Error loading workspaces</div>
@@ -306,7 +306,7 @@ export default function Home() {
             <div className="space-y-2">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-9 bg-neutral-800/50 rounded-md animate-pulse"></div>
+                  <div key={i} className="h-9 bg-neutral-800/50 rounded-md animate-pulse"><span className="sr-only">Loading...</span></div>
                 ))
               ) : error ? (
                 <div className="text-sm text-red-500 px-2 py-1.5">Error loading agents</div>
@@ -342,6 +342,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-neutral-900 text-white font-sans">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-neutral-900 focus:text-white">Skip to main content</a>
       {/* Sidebar */}
       {sidebarContent}
 
@@ -351,7 +352,7 @@ export default function Home() {
           <h2 className="font-semibold flex items-center gap-2 min-w-0">
             <Hash className="w-5 h-5 text-neutral-400 shrink-0" aria-hidden="true" />
             {isLoading ? (
-              <div className="h-5 w-32 bg-neutral-800 rounded animate-pulse"></div>
+              <div className="h-5 w-32 bg-neutral-800 rounded animate-pulse"><span className="sr-only">Loading...</span></div>
             ) : (
               <span className="truncate" title={activeWorkspace?.name || "Select a Workspace"}>
                 {activeWorkspace?.name || "Select a Workspace"}
