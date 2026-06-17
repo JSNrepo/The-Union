@@ -111,3 +111,9 @@ To prevent confusing keyboard navigation and screen reader announcements, read-o
 To ensure proper context is maintained when navigating multiple browser tabs and for screen reader users switching windows, the document title now dynamically updates to reflect the currently active workspace.
 
 ![Dynamic Document Title](assets/dynamic_document_title.png)
+
+#### Accessible Skeleton Loaders & Skip Navigation
+To ensure screen readers provide context during loading states, `animate-pulse` skeleton loaders now include visually hidden descriptions (`<span className="sr-only">Loading...</span>`). Additionally, a standard "Skip to main content" link has been added, allowing keyboard users to bypass the sidebar and jump directly to the primary chat interface.
+
+![Skip Link Focus State](assets/skip_link.png)
+[![Skip Link Demo](assets/skip_link.png)](assets/skip_link_demo.webm)

@@ -63,3 +63,7 @@
 ## 2024-06-12 - Dynamic Document Title Context
 **Learning:** In Single Page Applications, relying solely on internal state for navigation means the browser tab title remains static. This deprives users navigating multiple tabs and screen reader users switching windows of critical context about which workspace or room they are currently in.
 **Action:** Always dynamically update `document.title` to reflect the active primary context (e.g., active workspace or room) to improve external discoverability and accessibility context.
+
+## 2024-06-17 - Accessible Skeleton Loaders and Skip Links
+**Learning:** Screen readers announce empty animate-pulse divs as blank/silent, leading to confusion during loading states. Additionally, complex sidebar layouts without skip links force keyboard users to tab through all sidebar items to reach main content.
+**Action:** Always embed visually hidden descriptions (`<span className="sr-only">Loading...</span>`) inside skeleton loaders, and implement standard skip-to-content links for major layout regions.
