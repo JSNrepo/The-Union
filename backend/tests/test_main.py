@@ -444,3 +444,12 @@ def test_create_workspace_integrity_error(client: TestClient):
 
         assert res.status_code == 400
         assert res.json()["detail"] == "Workspace name already exists"
+
+def test_register_rate_limit(client: TestClient):
+    for i in range(10):
+        response = client.post("/register", json={"username": f"ratelimituser{i}", "password": "password123"})
+        assert response.status_code == 200
+
+    response = client.post("/register", json={"username": "ratelimituser10", "password": "password123"})
+    assert response.status_code == 429
+    assert response.json() == {"detail": "Too many registration attempts"}
