@@ -272,7 +272,7 @@ async def disconnect(sid: str) -> None:
 # Basic Auth routes to test
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=8, max_length=128)
+    password: str = Field(..., min_length=8, max_length=72)
 
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the register endpoint
 register_attempts: dict[str, list[float]] = {}
@@ -346,7 +346,7 @@ app.mount("/socket.io", socket_app)
 
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=8, max_length=128)
+    password: str = Field(..., min_length=8, max_length=72)
 
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the login endpoint
 login_attempts: dict[str, list[float]] = {}
