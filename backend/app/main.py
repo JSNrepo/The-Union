@@ -13,6 +13,7 @@ import socketio
 import os
 import asyncio
 import uuid
+import threading
 from typing import AsyncIterator, Any, Callable, Awaitable
 import httpx
 import jwt
@@ -276,19 +277,39 @@ class UserCreate(BaseModel):
 
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the register endpoint
 register_attempts: dict[str, list[float]] = {}
+register_last_cleanup: float = time.time()
+register_lock = threading.Lock()
 
 @app.post("/register")
 def register(user: UserCreate, request: Request, session: Session = Depends(get_session)) -> dict[str, str]:
+    global register_last_cleanup
     # 🛡️ Sentinel: Apply rate limiting to prevent DoS via expensive bcrypt operations
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
 
-    if client_ip in register_attempts:
-        register_attempts[client_ip] = [t for t in register_attempts[client_ip] if now - t < 3600]
-        if len(register_attempts[client_ip]) >= 10:
-            raise HTTPException(status_code=429, detail="Too many registration attempts")
+    # Periodic cleanup of inactive IPs to prevent memory leaks
+    if now - register_last_cleanup > 3600:
+        with register_lock:
+            if now - register_last_cleanup > 3600: # Double-checked locking
+                register_last_cleanup = now
+                inactive_ips = []
+                for ip in list(register_attempts.keys()):
+                    attempts = register_attempts.get(ip, [])
+                    valid_attempts = [t for t in attempts if now - t < 3600]
+                    if valid_attempts:
+                        register_attempts[ip] = valid_attempts
+                    else:
+                        inactive_ips.append(ip)
+                for ip in inactive_ips:
+                    register_attempts.pop(ip, None)
 
-    register_attempts.setdefault(client_ip, []).append(time.time())
+    with register_lock:
+        if client_ip in register_attempts:
+            register_attempts[client_ip] = [t for t in register_attempts[client_ip] if now - t < 3600]
+            if len(register_attempts[client_ip]) >= 10:
+                raise HTTPException(status_code=429, detail="Too many registration attempts")
+
+        register_attempts.setdefault(client_ip, []).append(now)
 
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
@@ -350,17 +371,37 @@ class LoginRequest(BaseModel):
 
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the login endpoint
 login_attempts: dict[str, list[float]] = {}
+login_last_cleanup: float = time.time()
+login_lock = threading.Lock()
 
 @app.post("/login")
 def login(req: LoginRequest, request: Request, session: Session = Depends(get_session)) -> dict[str, str]:
+    global login_last_cleanup
     # 🛡️ Sentinel: Apply rate limiting to prevent brute-force attacks
     client_ip = request.client.host if request.client else "unknown"
     now = time.time()
 
-    if client_ip in login_attempts:
-        login_attempts[client_ip] = [t for t in login_attempts[client_ip] if now - t < 900]
-        if len(login_attempts[client_ip]) >= 5:
-            raise HTTPException(status_code=429, detail="Too many login attempts")
+    # Periodic cleanup of inactive IPs to prevent memory leaks
+    if now - login_last_cleanup > 900:
+        with login_lock:
+            if now - login_last_cleanup > 900: # Double-checked locking
+                login_last_cleanup = now
+                inactive_ips = []
+                for ip in list(login_attempts.keys()):
+                    attempts = login_attempts.get(ip, [])
+                    valid_attempts = [t for t in attempts if now - t < 900]
+                    if valid_attempts:
+                        login_attempts[ip] = valid_attempts
+                    else:
+                        inactive_ips.append(ip)
+                for ip in inactive_ips:
+                    login_attempts.pop(ip, None)
+
+    with login_lock:
+        if client_ip in login_attempts:
+            login_attempts[client_ip] = [t for t in login_attempts[client_ip] if now - t < 900]
+            if len(login_attempts[client_ip]) >= 5:
+                raise HTTPException(status_code=429, detail="Too many login attempts")
 
     user = session.exec(select(User).where(User.username == req.username)).first()
 
@@ -368,11 +409,13 @@ def login(req: LoginRequest, request: Request, session: Session = Depends(get_se
         # 🛡️ Sentinel: Mitigate timing attacks by performing a dummy hash verification
         # to ensure the response time is indistinguishable from a valid user lookup
         verify_password(req.password, DUMMY_HASH)
-        login_attempts.setdefault(client_ip, []).append(time.time())
+        with login_lock:
+            login_attempts.setdefault(client_ip, []).append(time.time())
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     if not verify_password(req.password, user.hashed_password):
-        login_attempts.setdefault(client_ip, []).append(time.time())
+        with login_lock:
+            login_attempts.setdefault(client_ip, []).append(time.time())
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     access_token = create_access_token(data={"sub": str(user.id)})
