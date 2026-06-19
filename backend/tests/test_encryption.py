@@ -39,3 +39,7 @@ def test_get_encryption_key_fallback_salt():
          patch.dict(os.environ, {"UNION_MASTER_KEY": "123", "UNION_FALLBACK_SALT": "test-fallback-salt"}):
         key = get_encryption_key()
         assert len(key) > 0
+
+def test_decrypt_invalid_token():
+    with pytest.raises(ValueError, match="Invalid encryption token"):
+        decrypt_token("invalid_token")

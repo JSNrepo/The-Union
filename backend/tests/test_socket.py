@@ -279,3 +279,29 @@ async def test_chat_message_unauthorized_workspace():
 
         # Message should not be emitted because the user hasn't joined the workspace
         mock_emit.assert_not_called()
+
+@pytest.mark.anyio
+async def test_chat_message_mention_agent_invalid_token():
+    ws_id = str(uuid.uuid4())
+    with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
+         patch('app.main.Session') as mock_session:
+
+        # Setup mock DB
+        mock_db = MagicMock()
+        mock_session.return_value.__enter__.return_value = mock_db
+
+        # Mock Agent
+        mock_agent = MagicMock()
+        mock_agent.name = "TestAgent"
+
+        # Mock TokenPool
+        mock_pool = MagicMock()
+        mock_pool.encrypted_session_token = "invalid_encrypted_token_format"
+
+        mock_db.exec.return_value.all.return_value = [(mock_agent, mock_pool)]
+
+        await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello @TestAgent'})
+
+        assert mock_emit.call_count == 2
+        mock_emit.assert_any_call('chat_update', {'msg': 'Hello @TestAgent'}, room=ws_id)
+        mock_emit.assert_any_call('chat_update', {'msg': 'Agent TestAgent is offline (no token available).'}, room=ws_id)
