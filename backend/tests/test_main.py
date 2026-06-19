@@ -485,3 +485,29 @@ def test_login_cleanup(client: TestClient):
         client.post("/login", json={"username": "cleanup_user2", "password": "password"})
 
     assert "127.0.0.1" not in app.main.login_attempts
+
+def test_proxy_request_invalid_token(client: TestClient):
+    client.post("/register", json={"username": "proxyuser_invalid", "password": "password"})
+    login_response = client.post("/login", json={"username": "proxyuser_invalid", "password": "password"})
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    from app.main import get_session
+    from app.models import Agent, User, TokenPool
+    from sqlmodel import select
+
+    with next(get_session_override()) as session:
+        user = session.exec(select(User).where(User.username == "proxyuser_invalid")).first()
+        assert user is not None
+        agent_id = uuid.uuid4()
+        agent = Agent(id=agent_id, name="InvalidTokenAgent", owner_id=user.id, provider="openai")
+        session.add(agent)
+
+        # Add a TokenPool entry with invalid token
+        pool_entry = TokenPool(agent_id=agent.id, owner_user_id=user.id, encrypted_session_token="invalid_encrypted_token_format")
+        session.add(pool_entry)
+        session.commit()
+
+    response = client.post("/proxy-request", json={"agent_id": str(agent_id), "prompt": "Hello!"}, headers=headers)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Stored token for this agent is invalid or corrupt"}
