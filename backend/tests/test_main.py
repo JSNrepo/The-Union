@@ -453,3 +453,35 @@ def test_register_rate_limit(client: TestClient):
     response = client.post("/register", json={"username": "ratelimituser10", "password": "password123"})
     assert response.status_code == 429
     assert response.json() == {"detail": "Too many registration attempts"}
+
+def test_register_cleanup(client: TestClient):
+    import time
+    from unittest.mock import patch
+    import app.main
+
+    # Setup state
+    app.main.register_attempts["127.0.0.1"] = [1.0, 2.0]
+    app.main.register_attempts["127.0.0.2"] = [time.time()]
+    app.main.register_last_cleanup = 0
+
+    with patch("time.time") as mock_time:
+        mock_time.return_value = 10000.0 # Make 1.0 and 2.0 old
+        client.post("/register", json={"username": "cleanup_user", "password": "password"})
+
+    assert "127.0.0.1" not in app.main.register_attempts
+
+def test_login_cleanup(client: TestClient):
+    import time
+    from unittest.mock import patch
+    import app.main
+
+    # Setup state
+    app.main.login_attempts["127.0.0.1"] = [1.0, 2.0]
+    app.main.login_attempts["127.0.0.2"] = [time.time()]
+    app.main.login_last_cleanup = 0
+
+    with patch("time.time") as mock_time:
+        mock_time.return_value = 10000.0 # Make 1.0 and 2.0 old
+        client.post("/login", json={"username": "cleanup_user2", "password": "password"})
+
+    assert "127.0.0.1" not in app.main.login_attempts
