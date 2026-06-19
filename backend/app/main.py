@@ -243,8 +243,11 @@ async def chat_message(sid: str, data: dict[str, Any]) -> None:
 
                 for agent, pool_entry in results:
                     if pool_entry:
-                        token = decrypt_token(pool_entry.encrypted_session_token)
-                        infos.append({"name": agent.name, "provider": agent.provider, "token": token, "offline": False})
+                        try:
+                            token = decrypt_token(pool_entry.encrypted_session_token)
+                            infos.append({"name": agent.name, "provider": agent.provider, "token": token, "offline": False})
+                        except ValueError:
+                            infos.append({"name": agent.name, "offline": True})
                     else:
                         infos.append({"name": agent.name, "offline": True})
             return infos
@@ -449,7 +452,10 @@ async def proxy_request(req: ProxyRequest, session: Session = Depends(get_sessio
         if not pool_entry:
             raise HTTPException(status_code=400, detail="No token available for this agent")
 
-        token = decrypt_token(pool_entry.encrypted_session_token)
+        try:
+            token = decrypt_token(pool_entry.encrypted_session_token)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Stored token for this agent is invalid or corrupt")
 
         # Eagerly extract required data
         return {
