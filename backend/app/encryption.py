@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 import os
 import hashlib
 import base64
@@ -26,4 +26,7 @@ def encrypt_token(token: str) -> str:
     return fernet.encrypt(token.encode('utf-8')).decode('utf-8')
 
 def decrypt_token(encrypted_token: str) -> str:
-    return fernet.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
+    try:
+        return fernet.decrypt(encrypted_token.encode('utf-8')).decode('utf-8')
+    except InvalidToken:
+        raise ValueError("Invalid encryption token")
