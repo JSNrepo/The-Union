@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
 import os
+from typing import Any
 
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
@@ -29,7 +30,7 @@ def get_password_hash(password: str) -> str:
 # 🛡️ Sentinel: Precomputed dummy hash to mitigate timing attacks against the login endpoint
 DUMMY_HASH = get_password_hash("dummy")
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
