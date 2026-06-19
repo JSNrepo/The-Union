@@ -112,7 +112,7 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
 
 # Socket.IO Event Handlers
 @sio.event
-async def connect(sid: str, environ: dict) -> None:
+async def connect(sid: str, environ: dict[str, Any]) -> None:
     print(f"Client connected: {sid}")
 
 def verify_ws_auth_sync(workspace_id: str, token: str) -> uuid.UUID | None:
@@ -128,7 +128,7 @@ def verify_ws_auth_sync(workspace_id: str, token: str) -> uuid.UUID | None:
         return None
 
 @sio.event
-async def join_workspace(sid: str, data: dict) -> None:
+async def join_workspace(sid: str, data: dict[str, Any]) -> None:
     # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
     if not isinstance(data, dict):
         return
@@ -185,7 +185,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
             raise Exception("Unsupported provider")
 
 @sio.event
-async def chat_message(sid: str, data: dict) -> None:
+async def chat_message(sid: str, data: dict[str, Any]) -> None:
     # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
     if not isinstance(data, dict):
         return
