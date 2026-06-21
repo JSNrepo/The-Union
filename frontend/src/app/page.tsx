@@ -47,6 +47,9 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
             <Copy className="w-4 h-4" aria-hidden="true" />
           )}
         </Button>
+        <span aria-live="polite" className="sr-only">
+          {copied ? "Message copied to clipboard" : ""}
+        </span>
       </div>
     </div>
   );

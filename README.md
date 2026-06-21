@@ -112,6 +112,12 @@ To ensure proper context is maintained when navigating multiple browser tabs and
 
 ![Dynamic Document Title](assets/dynamic_document_title.png)
 
+#### Transient Success States
+To ensure accessibility, transient visual success states (like a copy icon briefly changing to a checkmark) now include a visually hidden, dynamically updated `aria-live="polite"` region, ensuring screen reader users receive explicit audio confirmation of their actions.
+
+![Accessible Copied State](assets/verification.png)
+[![Copied State Demo](assets/verification.png)](assets/verification_demo.webm)
+
 #### Accessible Skeleton Loaders & Skip Navigation
 To ensure screen readers provide context during loading states, `animate-pulse` skeleton loaders now include visually hidden descriptions (`<span className="sr-only">Loading...</span>`). Additionally, a standard "Skip to main content" link has been added, allowing keyboard users to bypass the sidebar and jump directly to the primary chat interface.
 

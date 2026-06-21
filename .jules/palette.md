@@ -67,3 +67,7 @@
 ## 2024-06-17 - Accessible Skeleton Loaders and Skip Links
 **Learning:** Screen readers announce empty animate-pulse divs as blank/silent, leading to confusion during loading states. Additionally, complex sidebar layouts without skip links force keyboard users to tab through all sidebar items to reach main content.
 **Action:** Always embed visually hidden descriptions (`<span className="sr-only">Loading...</span>`) inside skeleton loaders, and implement standard skip-to-content links for major layout regions.
+
+## 2026-06-21 - Screen Reader Announcements for Transient Success States
+**Learning:** In React components with visual-only success states (e.g., an icon changing from a copy icon to a checkmark for 2 seconds after copying), screen reader users completely miss the success confirmation because the visual change doesn't naturally trigger an announcement.
+**Action:** When implementing transient UI states like "Copied!", always include an `aria-live="polite"` region (such as `<span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>`) that renders the success text to explicitly announce the state change to assistive technologies.
