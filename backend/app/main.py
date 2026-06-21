@@ -9,7 +9,7 @@ from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
-import socketio
+import socketio  # type: ignore[import-untyped]
 import os
 import asyncio
 import uuid
@@ -111,7 +111,7 @@ def sync_token(req: SyncTokenRequest, x_api_key: str | None = Header(default=Non
     return {"status": "success"}
 
 # Socket.IO Event Handlers
-@sio.event
+@sio.event  # type: ignore[untyped-decorator]
 async def connect(sid: str, environ: dict[str, Any]) -> None:
     print(f"Client connected: {sid}")
 
@@ -127,7 +127,7 @@ def verify_ws_auth_sync(workspace_id: str, token: str) -> uuid.UUID | None:
         print("WebSocket auth error: Invalid token or workspace ID")
         return None
 
-@sio.event
+@sio.event  # type: ignore[untyped-decorator]
 async def join_workspace(sid: str, data: dict[str, Any]) -> None:
     # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
     if not isinstance(data, dict):
@@ -184,7 +184,7 @@ async def call_provider_api(provider: str, token: str, prompt: str) -> str:
         else:
             raise Exception("Unsupported provider")
 
-@sio.event
+@sio.event  # type: ignore[untyped-decorator]
 async def chat_message(sid: str, data: dict[str, Any]) -> None:
     # 🛡️ Sentinel: Validate input type and length to prevent unhandled exceptions and DoS
     if not isinstance(data, dict):
@@ -269,7 +269,7 @@ async def chat_message(sid: str, data: dict[str, Any]) -> None:
         if agent_infos:
             await asyncio.gather(*(handle_agent(info) for info in agent_infos))
 
-@sio.event
+@sio.event  # type: ignore[untyped-decorator]
 async def disconnect(sid: str) -> None:
     print(f"Client disconnected: {sid}")
 
