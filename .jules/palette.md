@@ -71,3 +71,6 @@
 ## 2026-06-21 - Screen Reader Announcements for Transient Success States
 **Learning:** In React components with visual-only success states (e.g., an icon changing from a copy icon to a checkmark for 2 seconds after copying), screen reader users completely miss the success confirmation because the visual change doesn't naturally trigger an announcement.
 **Action:** When implementing transient UI states like "Copied!", always include an `aria-live="polite"` region (such as `<span aria-live="polite" className="sr-only">{copied ? "Copied" : ""}</span>`) that renders the success text to explicitly announce the state change to assistive technologies.
+## 2024-06-22 - Add workspace name to message input aria-label and placeholder
+**Learning:** Screen reader users needed more context about which workspace they were typing in when focused on the message input. Adding the active workspace name dynamically to the input's placeholder and aria-label improves accessibility and usability.
+**Action:** Always provide dynamic context in input labels/placeholders when the scope of the input changes based on application state (like a selected channel or workspace).

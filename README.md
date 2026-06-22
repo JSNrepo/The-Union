@@ -123,3 +123,9 @@ To ensure screen readers provide context during loading states, `animate-pulse` 
 
 ![Skip Link Focus State](assets/skip_link.png)
 [![Skip Link Demo](assets/skip_link.png)](assets/skip_link_demo.webm)
+
+#### Dynamic Context in Input Labels
+To ensure screen reader users have clear context about which workspace they are currently messaging, the message input's placeholder and `aria-label` now dynamically include the active workspace name, preventing accidental messages in the wrong channel.
+
+![Dynamic Input Label](assets/verification.png)
+[![Dynamic Input Label Demo](assets/verification.png)](assets/verification_demo.webm)

@@ -89,7 +89,7 @@ interface Agent {
 
 // ⚡ Bolt Optimization: Extract MessageInput to its own component so that typing
 // doesn't trigger a re-render of the entire Home component (and Sidebar).
-const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSendMessage: (msg: string) => void, disabled: boolean, isLoading?: boolean }) => {
+const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspaceName }: { onSendMessage: (msg: string) => void, disabled: boolean, isLoading?: boolean, workspaceName?: string }) => {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -132,10 +132,10 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading }: { onSen
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleInputKeyDown}
-        placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : "Message @agents or team..."}
+        placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : workspaceName ? `Message #${workspaceName}...` : "Message @agents or team..."}
         className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600 peer"
         disabled={disabled}
-        aria-label="Message input"
+        aria-label={workspaceName ? `Message in ${workspaceName} workspace` : "Message input"}
         aria-keyshortcuts="/"
       />
       {!disabled && !message && (
@@ -417,7 +417,7 @@ export default function Home() {
         </div>
 
         <div className="p-4 px-6 pb-6">
-          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} isLoading={isLoading} />
+          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} isLoading={isLoading} workspaceName={activeWorkspace?.name} />
         </div>
       </main>
     </div>
