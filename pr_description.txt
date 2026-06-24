@@ -1,8 +1,4 @@
-## What I discovered
-While scanning the codebase for isolated issues, I found missing test coverage in `backend/app/main.py`. Specifically, the `join_workspace` WebSocket event handler lacked a test case for when a user fails authorization via `verify_ws_auth_sync`. If `verify_ws_auth_sync` returns `None`, the handler exits early, but this return path was entirely untested in the existing test suite (`backend/tests/test_socket.py`).
-
-## What I fixed/added
-I added a new test `test_join_workspace_unauthorized` in `backend/tests/test_socket.py`. This test mocks `verify_ws_auth_sync` to return `None` and asserts that neither `enter_room` nor `emit` are called, ensuring the early return logic is properly covered and tested.
-
-## Next Recommended Target
-I recommend looking into the missing coverage for other endpoints and error states in `backend/app/main.py`, particularly around token synchronization (`sync_token`) and basic auth error handling, which still have significant untested lines.
+💡 What: Added a "Say Hello" call-to-action button to the "No messages yet" empty state.
+🎯 Why: To reduce friction and encourage users to start a conversation in a new workspace.
+📸 Before/After: Visual change to the empty state.
+♿ Accessibility: Ensured the button has an appropriate aria-hidden icon and uses existing design system styles.

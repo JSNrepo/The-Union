@@ -129,3 +129,7 @@ To ensure screen reader users have clear context about which workspace they are 
 
 ![Dynamic Input Label](assets/verification.png)
 [![Dynamic Input Label Demo](assets/verification.png)](assets/verification_demo.webm)
+
+### Actionable Empty States
+Added a contextual call-to-action button to the empty message state to encourage interaction.
+[![Empty State CTA Screenshot](assets/verification_empty_state_cta.png)](assets/verification_empty_state_cta.webm)

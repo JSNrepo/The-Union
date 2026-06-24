@@ -406,9 +406,19 @@ export default function Home() {
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-neutral-400" aria-hidden="true" />
               </div>
-              <div className="text-center">
-                <p className="text-lg font-medium text-neutral-300">No messages yet</p>
-                <p className="text-sm">Start the conversation in {activeWorkspace.name}</p>
+              <div className="text-center max-w-md space-y-4">
+                <div>
+                  <p className="text-lg font-medium text-neutral-300">No messages yet</p>
+                  <p className="text-sm mb-4">Start the conversation in {activeWorkspace.name}</p>
+                </div>
+                <Button
+                  onClick={() => handleSendMessage("Hello! 👋")}
+                  variant="outline"
+                  className="border-neutral-700 bg-transparent text-neutral-300 hover:text-white hover:bg-neutral-800"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Say Hello
+                </Button>
               </div>
             </div>
           ) : (
