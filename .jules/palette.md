@@ -74,3 +74,7 @@
 ## 2024-06-22 - Add workspace name to message input aria-label and placeholder
 **Learning:** Screen reader users needed more context about which workspace they were typing in when focused on the message input. Adding the active workspace name dynamically to the input's placeholder and aria-label improves accessibility and usability.
 **Action:** Always provide dynamic context in input labels/placeholders when the scope of the input changes based on application state (like a selected channel or workspace).
+
+## 2024-06-25 - Actionable Empty States
+**Learning:** Users encountering a "No messages yet" screen without a clear way to start interacting may feel stuck. Providing a direct call-to-action (like a "Say Hello" button) in empty states reduces friction and encourages engagement.
+**Action:** Always include a helpful, contextual action button in empty state screens to guide the user's next step.
