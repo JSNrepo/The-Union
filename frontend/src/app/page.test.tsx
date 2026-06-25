@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { io } from 'socket.io-client';
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import Home from './page';
 
@@ -53,5 +54,87 @@ describe('Home Page', () => {
     await waitFor(() => {
       expect(document.title).toBe('General | The Union');
     });
+  });
+
+  it('simulates receiving a message and copying to clipboard', async () => {
+    let messageCallback: (data: { msg: string }) => void = () => {};
+
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      // @ts-ignore
+
+      on: vi.fn((event, callback) => {
+        if (event === 'message') {
+          messageCallback = callback;
+        }
+      }),
+      emit: vi.fn(),
+      close: vi.fn(),
+    });
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    Object.assign(navigator, {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    // Simulate receiving a message
+    act(() => {
+      messageCallback({ msg: 'Hello from socket' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello from socket')).toBeInTheDocument();
+    });
+
+    const copyButton = screen.getByRole('button', { name: 'Copy message' });
+    fireEvent.click(copyButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Hello from socket');
+    });
+  });
+
+  it('sends a message when input is submitted', async () => {
+    const mockEmit = vi.fn();
+
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      // @ts-ignore
+
+      on: vi.fn(),
+      emit: mockEmit,
+      close: vi.fn(),
+    });
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Say Hello')).toBeInTheDocument();
+    });
+
+    const sendButton = screen.getByText('Say Hello');
+    fireEvent.click(sendButton);
+
+    expect(mockEmit).toHaveBeenCalledWith('chat_message', expect.objectContaining({
+      workspace_id: '1',
+      message: 'Hello! 👋'
+    }));
   });
 });
