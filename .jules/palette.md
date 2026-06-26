@@ -78,3 +78,7 @@
 ## 2024-06-25 - Actionable Empty States
 **Learning:** Users encountering a "No messages yet" screen without a clear way to start interacting may feel stuck. Providing a direct call-to-action (like a "Say Hello" button) in empty states reduces friction and encourages engagement.
 **Action:** Always include a helpful, contextual action button in empty state screens to guide the user's next step.
+
+## 2024-06-26 - Organic Skeletons & Actionable Sidebar States
+**Learning:** Identical repeating skeleton rectangles create a sterile, unnatural loading experience, and bare text for empty/error states in narrow sidebars feels broken. Staggered skeleton widths and styled empty states significantly improve perceived performance and UI completeness.
+**Action:** When implementing loading states for lists, always use varying widths (e.g., `["w-full", "w-11/12", "w-5/6"]`) to create an organic text-like appearance. Ensure all empty/error states have appropriate visual hierarchy (borders, background tints, and icons) rather than floating plain text.
