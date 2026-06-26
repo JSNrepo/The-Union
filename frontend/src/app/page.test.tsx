@@ -62,7 +62,7 @@ describe('Home Page', () => {
     const mockIo = vi.mocked(io);
     mockIo.mockReturnValue({
       ...vi.mocked(io)(),
-      // @ts-ignore
+      // @ts-expect-error Mock implementation
 
       on: vi.fn((event, callback) => {
         if (event === 'message') {
@@ -111,7 +111,7 @@ describe('Home Page', () => {
     const mockIo = vi.mocked(io);
     mockIo.mockReturnValue({
       ...vi.mocked(io)(),
-      // @ts-ignore
+      // @ts-expect-error Mock implementation
 
       on: vi.fn(),
       emit: mockEmit,
@@ -126,6 +126,10 @@ describe('Home Page', () => {
 
     render(<Home />);
     await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
       expect(screen.getByText('Say Hello')).toBeInTheDocument();
     });
 
@@ -136,5 +140,120 @@ describe('Home Page', () => {
       workspace_id: '1',
       message: 'Hello! 👋'
     }));
+  });
+
+  it('handles connect event and emits join_workspace', async () => {
+    let connectCallback: () => void = () => {};
+    const mockEmit = vi.fn();
+
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      // @ts-expect-error Mock implementation
+      on: vi.fn((event, callback) => {
+        if (event === 'connect') {
+          connectCallback = callback;
+        }
+      }),
+      emit: mockEmit,
+      close: vi.fn(),
+    });
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    act(() => {
+      connectCallback();
+    });
+
+    expect(mockEmit).toHaveBeenCalledWith('join_workspace', {
+      workspace_id: '1', // General is the default
+      token: 'mock-token'
+    });
+  });
+
+  it('simulates receiving a chat_update message', async () => {
+    let chatUpdateCallback: (data: { msg: string }) => void = () => {};
+
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      // @ts-expect-error Mock implementation
+      on: vi.fn((event, callback) => {
+        if (event === 'chat_update') {
+          chatUpdateCallback = callback;
+        }
+      }),
+      emit: vi.fn(),
+      close: vi.fn(),
+    });
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    act(() => {
+      chatUpdateCallback({ msg: 'Agent typing...' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Agent typing...')).toBeInTheDocument();
+    });
+  });
+
+  it('allows switching workspaces', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const engWorkspaceButton = screen.getByText('Engineering');
+    fireEvent.click(engWorkspaceButton);
+
+    await waitFor(() => {
+      expect(document.title).toBe('Engineering | The Union');
+    });
+  });
+
+  it('reloads window on Try Again click', async () => {
+    const originalLocation = window.location;
+    // @ts-expect-error Mock implementation
+    delete window.location;
+    window.location = { ...originalLocation, reload: vi.fn() };
+
+    (global.fetch as Mock).mockRejectedValueOnce(new Error('Network failure'));
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Connection Error')).toBeInTheDocument();
+    });
+
+    const tryAgainButton = screen.getByRole('button', { name: /try again/i });
+    fireEvent.click(tryAgainButton);
+
+    expect(window.location.reload).toHaveBeenCalled();
+
+    window.location = originalLocation;
   });
 });
