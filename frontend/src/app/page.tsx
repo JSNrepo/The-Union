@@ -276,13 +276,13 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Workspaces</h2>
             <div className="space-y-1">
               {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-8 bg-neutral-800/50 rounded-md animate-pulse"><span className="sr-only">Loading...</span></div>
+                ["w-full", "w-11/12", "w-5/6"].map((width, i) => (
+                  <div key={i} className={`h-8 bg-neutral-800/50 rounded-md animate-pulse ${width}`}><span className="sr-only">Loading...</span></div>
                 ))
               ) : error ? (
-                <div className="text-sm text-red-500 px-2 py-1.5">Error loading workspaces</div>
+                <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading workspaces</span></div>
               ) : workspaces.length === 0 ? (
-                <div className="text-sm text-neutral-500 px-2 py-1.5">No workspaces found</div>
+                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No workspaces</span></div>
               ) : (
                 workspaces.map((ws) => (
                 <button
@@ -308,13 +308,13 @@ export default function Home() {
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">AI Pool</h2>
             <div className="space-y-2">
               {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-9 bg-neutral-800/50 rounded-md animate-pulse"><span className="sr-only">Loading...</span></div>
+                ["w-full", "w-11/12", "w-5/6"].map((width, i) => (
+                  <div key={i} className={`h-9 bg-neutral-800/50 rounded-md animate-pulse ${width}`}><span className="sr-only">Loading...</span></div>
                 ))
               ) : error ? (
-                <div className="text-sm text-red-500 px-2 py-1.5">Error loading agents</div>
+                <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading agents</span></div>
               ) : agents.length === 0 ? (
-                <div className="text-sm text-neutral-500 px-2 py-1.5">No agents available</div>
+                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No agents available</span></div>
               ) : (
                 agents.map((agent) => (
                 <div
