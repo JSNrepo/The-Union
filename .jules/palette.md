@@ -82,3 +82,6 @@
 ## 2024-06-26 - Organic Skeletons & Actionable Sidebar States
 **Learning:** Identical repeating skeleton rectangles create a sterile, unnatural loading experience, and bare text for empty/error states in narrow sidebars feels broken. Staggered skeleton widths and styled empty states significantly improve perceived performance and UI completeness.
 **Action:** When implementing loading states for lists, always use varying widths (e.g., `["w-full", "w-11/12", "w-5/6"]`) to create an organic text-like appearance. Ensure all empty/error states have appropriate visual hierarchy (borders, background tints, and icons) rather than floating plain text.
+## 2024-06-27 - Preventing Focus Loss on State Changes
+**Learning:** When a keyboard or mouse user activates a button (like "Send" or "Say Hello") that subsequently becomes disabled or is removed from the DOM, focus drops to the document `<body>`. This forces keyboard users to start navigating the entire page from the beginning, creating a frustrating experience.
+**Action:** Always explicitly restore focus to the most logical next element (usually the input field or the next actionable item) using `setTimeout(() => inputRef.current?.focus(), 0)` after the triggering action completes.

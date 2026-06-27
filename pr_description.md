@@ -1,0 +1,4 @@
+💡 What: Added logic to explicitly restore focus to the input field after sending a message. Also dynamically added `disabled={!activeWorkspace || isLoading}` to `<MessageInput>`.
+🎯 Why: When a keyboard or mouse user activated the "Send" or "Say Hello" button, which subsequently became disabled or was removed from the DOM, focus would drop to the document `<body>`. This forced keyboard users to start navigating the entire page from the beginning, creating a frustrating experience.
+📸 Before/After: Focus now stays on the input field after sending a message or clicking "Say Hello". No visual changes to the UI components themselves.
+♿ Accessibility: Improved keyboard navigation by preventing focus from being unexpectedly lost or reset to the beginning of the document when interacting with dynamic UI states.
