@@ -14,7 +14,14 @@ jobs:
     steps:
       # Instantly merges the PR directly without looking for branch protection queues
       - name: Force Instant Merge
-        run: gh pr merge --squash --delete-branch "$PR_URL"
+        run: |
+          for i in 1 2 3 4 5; do
+            if gh pr merge --squash --delete-branch "$PR_URL"; then
+              break
+            fi
+            echo "Retrying due to failure..."
+            sleep 5
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}

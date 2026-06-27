@@ -256,4 +256,23 @@ describe('Home Page', () => {
 
     window.location = originalLocation;
   });
+
+  it('blurs message input when Escape is pressed', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const input = screen.getByPlaceholderText('Message #General...');
+    input.focus();
+    expect(input).toHaveFocus();
+    fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' });
+    expect(input).not.toHaveFocus();
+  });
 });
