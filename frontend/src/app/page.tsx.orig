@@ -116,7 +116,6 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspace
     if (message.trim() && !disabled) {
       onSendMessage(message);
       setMessage("");
-      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
@@ -129,7 +128,6 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspace
   return (
     <form onSubmit={handleSubmit} className="relative flex items-center">
       <Input
-        id="message-input"
         ref={inputRef}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -414,10 +412,7 @@ export default function Home() {
                   <p className="text-sm mb-4">Start the conversation in {activeWorkspace.name}</p>
                 </div>
                 <Button
-                  onClick={() => {
-                    handleSendMessage("Hello! 👋");
-                    setTimeout(() => document.getElementById("message-input")?.focus(), 0);
-                  }}
+                  onClick={() => handleSendMessage("Hello! 👋")}
                   variant="outline"
                   className="border-neutral-700 bg-transparent text-neutral-300 hover:text-white hover:bg-neutral-800"
                 >
@@ -432,7 +427,7 @@ export default function Home() {
         </div>
 
         <div className="p-4 px-6 pb-6">
-          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace || isLoading} isLoading={isLoading} workspaceName={activeWorkspace?.name} />
+          <MessageInput onSendMessage={handleSendMessage} disabled={!activeWorkspace} isLoading={isLoading} workspaceName={activeWorkspace?.name} />
         </div>
       </main>
     </div>
