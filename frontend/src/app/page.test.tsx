@@ -175,7 +175,7 @@ describe('Home Page', () => {
     });
 
     expect(mockEmit).toHaveBeenCalledWith('join_workspace', {
-      workspace_id: '1', // General is the default
+      workspace_id: mockWorkspaces[0].id, // General is the default
       token: 'mock-token'
     });
   });
@@ -214,6 +214,60 @@ describe('Home Page', () => {
     await waitFor(() => {
       expect(screen.getByText('Agent typing...')).toBeInTheDocument();
     });
+  });
+
+
+  it('handles input escape key blur', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const engWorkspaceButton = screen.getByText('Engineering');
+    fireEvent.click(engWorkspaceButton);
+
+
+    const input = screen.getByPlaceholderText('Message #Engineering...');
+    input.focus();
+    expect(input).toHaveFocus();
+
+    fireEvent.keyDown(input, { key: 'Escape', code: 'Escape' });
+    expect(input).not.toHaveFocus();
+  });
+
+
+  it('prevents sending empty messages', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    const mockEmit = vi.fn();
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      emit: mockEmit,
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const button = screen.getByText('Engineering');
+    fireEvent.click(button);
+    const input = screen.getByPlaceholderText('Message #Engineering...');
+    fireEvent.change(input, { target: { value: '   ' } });
+    fireEvent.submit(input);
+
+    expect(mockEmit).not.toHaveBeenCalledWith('message', expect.anything());
   });
 
   it('allows switching workspaces', async () => {
