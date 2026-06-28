@@ -211,16 +211,10 @@ describe('Home Page', () => {
       chatUpdateCallback({ msg: 'Agent typing...' });
     });
 
-    // After receiving chat_update, the message is added to state, but we need
-    // an act() block for React to flush the effect (auto-scroll) correctly.
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 0));
-    });
-
     await waitFor(() => {
-        expect(screen.getByText('Agent typing...')).toBeInTheDocument();
-    }, { timeout: 2000 });
-});
+      expect(screen.getByText('Agent typing...')).toBeInTheDocument();
+    });
+  });
 
 
   it('handles input escape key blur', async () => {
