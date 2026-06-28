@@ -57,3 +57,7 @@
 ## 2024-11-20 - Skip loading User model from DB on JWT endpoints
 **Learning:** By default, FastAPIs auth dependency `get_current_user` extracts the JWT token, decodes it, and *then* fetches the `User` object from the database. When an endpoint only needs the user's ID to filter other tables (like `Workspace` or `Agent`) or to create link models, this results in an unnecessary extra database query that slows down API response times.
 **Action:** Extract a `get_current_user_id` dependency that returns the `uuid.UUID` purely from the decoded JWT payload. Use this dependency instead of `get_current_user` for endpoints that only need to filter by owner ID or establish a relationship link to eliminate a redundant SQL query.
+
+## 2026-06-28 - [React O(N) Re-renders on State Change in Memoized Components]
+**Learning:** Even if a large component block (like `sidebarContent`) is wrapped in `useMemo`, if it depends on a frequently changing state (like `activeWorkspace`), any inline `Array.map()` operations inside it will completely re-evaluate and re-render all their children, leading to an O(N) performance cost on every state change.
+**Action:** Always extract the children of mapped arrays into standalone `React.memo` components, and ensure any independent, static data lists (like `agents`) within the same block are isolated into their own separate `useMemo` blocks to achieve O(1) rendering costs when unrelated state changes.

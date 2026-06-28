@@ -87,6 +87,28 @@ interface Agent {
   provider: string;
 }
 
+// ⚡ Bolt Optimization: Extract workspace items into a memoized component.
+// This ensures that when activeWorkspace changes, only the previously active
+// and newly active WorkspaceItem components re-render, rather than the entire list.
+const WorkspaceItem = React.memo(({ ws, isActive, onClick }: { ws: Workspace; isActive: boolean; onClick: (ws: Workspace) => void }) => {
+  return (
+    <button
+      onClick={() => onClick(ws)}
+      className={`flex items-center w-full text-left gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 ${
+        isActive
+          ? "bg-neutral-800 text-white"
+          : "hover:bg-neutral-800/50 text-neutral-400"
+      }`}
+      aria-current={isActive ? "true" : undefined}
+      title={ws.name}
+    >
+      <Hash className="w-4 h-4 shrink-0" aria-hidden="true" />
+      <span className="truncate">{ws.name}</span>
+    </button>
+  );
+});
+WorkspaceItem.displayName = 'WorkspaceItem';
+
 // ⚡ Bolt Optimization: Extract MessageInput to its own component so that typing
 // doesn't trigger a re-render of the entire Home component (and Sidebar).
 const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspaceName }: { onSendMessage: (msg: string) => void, disabled: boolean, isLoading?: boolean, workspaceName?: string }) => {
@@ -261,6 +283,48 @@ export default function Home() {
     }
   }, [activeWorkspace]);
 
+  // ⚡ Bolt Optimization: Wrap workspace selection handler in useCallback
+  // to pass a stable reference down to the memoized WorkspaceItem components.
+  const handleWorkspaceClick = useCallback((ws: Workspace) => {
+    setActiveWorkspace(ws);
+  }, []);
+
+  // ⚡ Bolt Optimization: Isolate the agents mapping into its own useMemo block.
+  // This ensures the agent list (which doesn't depend on activeWorkspace) doesn't
+  // re-evaluate when the user merely switches between workspaces.
+  const agentsListContent = useMemo(() => {
+    if (isLoading) {
+      return ["w-full", "w-11/12", "w-5/6"].map((width, i) => (
+        <div key={i} className={`h-9 bg-neutral-800/50 rounded-md animate-pulse ${width}`}><span className="sr-only">Loading...</span></div>
+      ));
+    }
+    if (error) {
+      return <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading agents</span></div>;
+    }
+    if (agents.length === 0) {
+      return <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No agents available</span></div>;
+    }
+    return agents.map((agent) => (
+      <div
+        key={agent.id}
+        className="group flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md"
+        title={agent.name}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 shrink-0 rounded bg-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
+            <Bot className="w-3 h-3 text-white" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm truncate">{agent.name}</span>
+            <span className="text-[10px] text-neutral-500 truncate leading-none" title={agent.provider}>{agent.provider}</span>
+          </div>
+        </div>
+        <span className="sr-only">Online</span>
+        <div aria-hidden="true" className="w-2 h-2 shrink-0 rounded-full bg-green-500 ml-2"></div>
+      </div>
+    ));
+  }, [agents, isLoading, error]);
+
   // ⚡ Bolt Optimization: Memoize the Sidebar to prevent its expensive loops (workspaces.map and agents.map)
   // from re-evaluating every time a new chat message arrives (which updates `messages` state and triggers Home re-render).
   const sidebarContent = useMemo(() => {
@@ -287,20 +351,12 @@ export default function Home() {
                 <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No workspaces</span></div>
               ) : (
                 workspaces.map((ws) => (
-                <button
-                  key={ws.id}
-                  onClick={() => setActiveWorkspace(ws)}
-                  className={`flex items-center w-full text-left gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 ${
-                    activeWorkspace?.id === ws.id
-                      ? "bg-neutral-800 text-white"
-                      : "hover:bg-neutral-800/50 text-neutral-400"
-                  }`}
-                  aria-current={activeWorkspace?.id === ws.id ? "true" : undefined}
-                  title={ws.name}
-                >
-                  <Hash className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{ws.name}</span>
-                </button>
+                  <WorkspaceItem
+                    key={ws.id}
+                    ws={ws}
+                    isActive={activeWorkspace?.id === ws.id}
+                    onClick={handleWorkspaceClick}
+                  />
                 ))
               )}
             </div>
@@ -309,41 +365,13 @@ export default function Home() {
           <div className="px-4">
             <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">AI Pool</h2>
             <div className="space-y-2">
-              {isLoading ? (
-                ["w-full", "w-11/12", "w-5/6"].map((width, i) => (
-                  <div key={i} className={`h-9 bg-neutral-800/50 rounded-md animate-pulse ${width}`}><span className="sr-only">Loading...</span></div>
-                ))
-              ) : error ? (
-                <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading agents</span></div>
-              ) : agents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No agents available</span></div>
-              ) : (
-                agents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="group flex items-center justify-between w-full text-left px-2 py-1.5 hover:bg-neutral-800/50 rounded-md"
-                  title={agent.name}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 shrink-0 rounded bg-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                      <Bot className="w-3 h-3 text-white" aria-hidden="true" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm truncate">{agent.name}</span>
-                      <span className="text-[10px] text-neutral-500 truncate leading-none" title={agent.provider}>{agent.provider}</span>
-                    </div>
-                  </div>
-                  <span className="sr-only">Online</span>
-                  <div aria-hidden="true" className="w-2 h-2 shrink-0 rounded-full bg-green-500 ml-2"></div>
-                </div>
-                ))
-              )}
+              {agentsListContent}
             </div>
           </div>
         </div>
       </aside>
     );
-  }, [isLoading, error, workspaces, agents, activeWorkspace?.id]);
+  }, [isLoading, error, workspaces, activeWorkspace?.id, handleWorkspaceClick, agentsListContent]);
 
   return (
     <div className="flex h-screen bg-neutral-900 text-white font-sans">
