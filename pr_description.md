@@ -1,4 +1,7 @@
-💡 What: Added logic to explicitly restore focus to the input field after sending a message. Also dynamically added `disabled={!activeWorkspace || isLoading}` to `<MessageInput>`.
-🎯 Why: When a keyboard or mouse user activated the "Send" or "Say Hello" button, which subsequently became disabled or was removed from the DOM, focus would drop to the document `<body>`. This forced keyboard users to start navigating the entire page from the beginning, creating a frustrating experience.
-📸 Before/After: Focus now stays on the input field after sending a message or clicking "Say Hello". No visual changes to the UI components themselves.
-♿ Accessibility: Improved keyboard navigation by preventing focus from being unexpectedly lost or reset to the beginning of the document when interacting with dynamic UI states.
+💡 What: Extract inline `workspaces.map()` items into a standalone `React.memo` component (`WorkspaceItem`), use `useCallback` for the workspace selection handler, and isolate the `agents.map()` logic into an independent `useMemo` block.
+
+🎯 Why: Previously, the entire `sidebarContent` block (including the agents list and all workspaces) was re-evaluating and re-rendering every time the user switched between workspaces because `activeWorkspace` changed. Inline mapping forced an O(N) re-render of all child elements.
+
+📊 Impact: Reduces sidebar rendering cost from O(N) to O(1) on workspace switch. Now, only the previously active and newly active `WorkspaceItem` components will re-render, and the agents list remains entirely untouched.
+
+🔬 Measurement: Profile the application using React DevTools. Switching between workspaces should no longer cause flashes on the `agents` list or inactive workspaces in the profiler flamegraph.
