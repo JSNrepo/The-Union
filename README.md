@@ -133,3 +133,7 @@ To ensure screen reader users have clear context about which workspace they are 
 ### Actionable Empty States
 Added a contextual call-to-action button to the empty message state to encourage interaction.
 [![Empty State CTA Screenshot](assets/verification_empty_state_cta.png)](assets/verification_empty_state_cta.webm)
+
+### Accessible Custom Tooltips
+To improve accessibility for keyboard users and provide a consistent visual experience across browsers, native title attributes on icon-only buttons (like Settings) have been replaced with custom, ARIA-compliant tooltips that appear on both hover and focus.
+![Accessible Tooltip Focus State](assets/verification_tooltip.png)

@@ -85,3 +85,6 @@
 ## 2024-06-27 - Preventing Focus Loss on State Changes
 **Learning:** When a keyboard or mouse user activates a button (like "Send" or "Say Hello") that subsequently becomes disabled or is removed from the DOM, focus drops to the document `<body>`. This forces keyboard users to start navigating the entire page from the beginning, creating a frustrating experience.
 **Action:** Always explicitly restore focus to the most logical next element (usually the input field or the next actionable item) using `setTimeout(() => inputRef.current?.focus(), 0)` after the triggering action completes.
+## 2026-06-29 - Accessible Custom Tooltips vs Native Title Attribute
+**Learning:** Relying solely on the native `title` attribute for icon-only buttons (like a Settings gear) provides a poor experience because they are often not accessible via keyboard focus and have inconsistent styling across browsers.
+**Action:** Always implement custom tooltips using ARIA roles (`role="tooltip"`), `aria-hidden="true"`, and CSS focus/hover states (e.g., `peer-focus-visible:opacity-100 group-hover:opacity-100`) to ensure tooltips are both visually consistent and accessible to all users.
