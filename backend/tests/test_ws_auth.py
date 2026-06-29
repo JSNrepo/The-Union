@@ -6,7 +6,7 @@ from app.main import verify_ws_auth_sync
 from app.models import UserWorkspaceLink
 from app.auth import create_access_token
 
-def test_verify_ws_auth_sync_success():
+def test_verify_ws_auth_sync_success() -> None:
     test_engine = create_engine("sqlite://")
     SQLModel.metadata.create_all(test_engine)
 
@@ -23,7 +23,7 @@ def test_verify_ws_auth_sync_success():
     with patch('app.main.engine', test_engine):
         assert verify_ws_auth_sync(str(ws_uuid), token) is not None
 
-def test_verify_ws_auth_sync_not_found():
+def test_verify_ws_auth_sync_not_found() -> None:
     test_engine = create_engine("sqlite://")
     SQLModel.metadata.create_all(test_engine)
 
@@ -35,7 +35,7 @@ def test_verify_ws_auth_sync_not_found():
     with patch('app.main.engine', test_engine):
         assert verify_ws_auth_sync(str(ws_uuid), token) is None
 
-def test_verify_ws_auth_sync_exception():
+def test_verify_ws_auth_sync_exception() -> None:
     token = create_access_token({"sub": str(uuid.uuid4())})
     # invalid uuid will trigger ValueError inside try block
     assert verify_ws_auth_sync("not-a-uuid", token) is None

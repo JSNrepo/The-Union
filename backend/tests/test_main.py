@@ -3,11 +3,11 @@ import pytest
 from app.main import login_attempts, register_attempts
 
 @pytest.fixture(autouse=True)
-def clear_login_attempts():
+def clear_login_attempts() -> None:
     login_attempts.clear()
 
 @pytest.fixture(autouse=True)
-def clear_register_attempts():
+def clear_register_attempts() -> None:
     register_attempts.clear()
 
 import pytest
@@ -19,7 +19,8 @@ import os
 from unittest.mock import patch
 from sqlalchemy.exc import IntegrityError
 
-from app.main import app, get_session
+from app.main import app
+from app.database import get_session
 from app.models import User, Workspace, Agent
 
 # Setup in-memory sqlite database for testing
@@ -27,12 +28,14 @@ engine = create_engine(
     "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 
-def get_session_override():
+from typing import Generator
+def get_session_override() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
 
+from typing import Generator
 @pytest.fixture(name="client")
-def client_fixture():
+def client_fixture() -> Generator[TestClient, None, None]:
     SQLModel.metadata.create_all(engine)
     app.dependency_overrides[get_session] = get_session_override
     with TestClient(app) as client:
@@ -40,36 +43,36 @@ def client_fixture():
     app.dependency_overrides.clear()
     SQLModel.metadata.drop_all(engine)
 
-def test_register(client: TestClient):
+def test_register(client: TestClient) -> None:
     response = client.post("/register", json={"username": "testuser", "password": "testpassword"})
     assert response.status_code == 200
     assert response.json() == {"msg": "User created"}
 
-def test_register_duplicate_username(client: TestClient):
+def test_register_duplicate_username(client: TestClient) -> None:
     client.post("/register", json={"username": "dupuser", "password": "password"})
     response = client.post("/register", json={"username": "dupuser", "password": "password"})
     assert response.status_code == 400
     assert response.json() == {"detail": "Username already registered"}
 
-def test_login_success(client: TestClient):
+def test_login_success(client: TestClient) -> None:
     client.post("/register", json={"username": "loginuser", "password": "password"})
     response = client.post("/login", json={"username": "loginuser", "password": "password"})
     assert response.status_code == 200
     assert "access_token" in response.json()
     assert response.json()["token_type"] == "bearer"
 
-def test_login_invalid_password(client: TestClient):
+def test_login_invalid_password(client: TestClient) -> None:
     client.post("/register", json={"username": "loginuser2", "password": "password"})
     response = client.post("/login", json={"username": "loginuser2", "password": "wrongpassword"})
     assert response.status_code == 400
     assert response.json() == {"detail": "Incorrect username or password"}
 
-def test_login_nonexistent_user(client: TestClient):
+def test_login_nonexistent_user(client: TestClient) -> None:
     response = client.post("/login", json={"username": "nonexistent", "password": "password"})
     assert response.status_code == 400
     assert response.json() == {"detail": "Incorrect username or password"}
 
-def test_login_rate_limiting(client: TestClient):
+def test_login_rate_limiting(client: TestClient) -> None:
     # Attempt 5 failed logins
     for _ in range(5):
         response = client.post("/login", json={"username": "nonexistent", "password": "password"})
@@ -80,7 +83,7 @@ def test_login_rate_limiting(client: TestClient):
     assert response.status_code == 429
     assert response.json() == {"detail": "Too many login attempts"}
 
-def test_create_and_list_workspaces(client: TestClient):
+def test_create_and_list_workspaces(client: TestClient) -> None:
     client.post("/register", json={"username": "wsuser", "password": "password"})
     login_response = client.post("/login", json={"username": "wsuser", "password": "password"})
     token = login_response.json()["access_token"]
@@ -99,12 +102,12 @@ def test_create_and_list_workspaces(client: TestClient):
     assert len(ws_list) >= 1
     assert any(ws["name"] == "Test Workspace" for ws in ws_list)
 
-def test_unauthorized_access(client: TestClient):
+def test_unauthorized_access(client: TestClient) -> None:
     response = client.get("/workspaces")
     assert response.status_code == 401
 
 
-def test_sync_token(client: TestClient):
+def test_sync_token(client: TestClient) -> None:
     # Setup user
     client.post("/register", json={"username": "syncuser", "password": "password"})
     login_response = client.post("/login", json={"username": "syncuser", "password": "password"})
@@ -112,7 +115,7 @@ def test_sync_token(client: TestClient):
     headers = {"Authorization": f"Bearer {token}"}
 
     # We need to manually add an Agent in db since there's no endpoint to create one
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User
     from sqlmodel import select
 
@@ -145,7 +148,7 @@ def test_sync_token(client: TestClient):
     assert response2.status_code == 200
     assert response2.json() == {"status": "success"}
 
-def test_sync_token_invalid_api_key(client: TestClient):
+def test_sync_token_invalid_api_key(client: TestClient) -> None:
     sync_data = {
         "provider": "openai",
         "token": "my-secret-token",
@@ -158,10 +161,10 @@ def test_sync_token_invalid_api_key(client: TestClient):
 from unittest.mock import patch
 from sqlalchemy.exc import IntegrityError
 
-def test_sync_token_integrity_error(client: TestClient):
+def test_sync_token_integrity_error(client: TestClient) -> None:
     client.post("/register", json={"username": "syncracer", "password": "password"})
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User
     from sqlmodel import select
 
@@ -189,7 +192,7 @@ def test_sync_token_integrity_error(client: TestClient):
     assert response.status_code == 409
     assert response.json() == {"detail": "Token for this agent already exists"}
 
-def test_sync_token_agent_not_found(client: TestClient):
+def test_sync_token_agent_not_found(client: TestClient) -> None:
     ext_api_key = os.getenv("EXTENSION_API_KEY")
     assert ext_api_key is not None
     sync_headers = {"x-api-key": ext_api_key}
@@ -203,12 +206,12 @@ def test_sync_token_agent_not_found(client: TestClient):
     assert response.json() == {"detail": "Agent not found"}
 
 
-def test_sync_token_update_existing(client: TestClient):
+def test_sync_token_update_existing(client: TestClient) -> None:
     client.post("/register", json={"username": "syncuser_update", "password": "password"})
     login_response = client.post("/login", json={"username": "syncuser_update", "password": "password"})
     token = login_response.json()["access_token"]
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User, TokenPool
     from sqlmodel import select
     from app.encryption import decrypt_token
@@ -255,13 +258,13 @@ def test_sync_token_update_existing(client: TestClient):
         decrypted_token = decrypt_token(pool_entry.encrypted_session_token)
         assert decrypted_token == "updated-secret-token"
 
-def test_list_agents(client: TestClient):
+def test_list_agents(client: TestClient) -> None:
     client.post("/register", json={"username": "agentuser", "password": "password"})
     login_response = client.post("/login", json={"username": "agentuser", "password": "password"})
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User
     from sqlmodel import select
 
@@ -281,13 +284,13 @@ def test_list_agents(client: TestClient):
 
 from unittest.mock import patch, AsyncMock
 
-def test_proxy_request(client: TestClient):
+def test_proxy_request(client: TestClient) -> None:
     client.post("/register", json={"username": "proxyuser", "password": "password"})
     login_response = client.post("/login", json={"username": "proxyuser", "password": "password"})
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User, TokenPool
     from app.encryption import encrypt_token
     from sqlmodel import select
@@ -320,7 +323,7 @@ def test_proxy_request(client: TestClient):
     assert response.status_code == 404
     assert response.json() == {"detail": "Agent not found"}
 
-def test_proxy_request_unauthorized(client: TestClient):
+def test_proxy_request_unauthorized(client: TestClient) -> None:
     # Register two users
     client.post("/register", json={"username": "proxyuser_unauth1", "password": "password"})
     client.post("/register", json={"username": "proxyuser_unauth2", "password": "password"})
@@ -330,7 +333,7 @@ def test_proxy_request_unauthorized(client: TestClient):
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User, TokenPool
     from app.encryption import encrypt_token
     from sqlmodel import select
@@ -355,13 +358,13 @@ def test_proxy_request_unauthorized(client: TestClient):
     assert response.status_code == 403
     assert response.json() == {"detail": "Not authorized to access this agent"}
 
-def test_proxy_request_no_token(client: TestClient):
+def test_proxy_request_no_token(client: TestClient) -> None:
     client.post("/register", json={"username": "proxynotoken", "password": "password"})
     login_response = client.post("/login", json={"username": "proxynotoken", "password": "password"})
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User
     from sqlmodel import select
 
@@ -377,13 +380,13 @@ def test_proxy_request_no_token(client: TestClient):
     assert response.status_code == 400
     assert response.json() == {"detail": "No token available for this agent"}
 
-def test_proxy_request_api_error(client: TestClient):
+def test_proxy_request_api_error(client: TestClient) -> None:
     client.post("/register", json={"username": "proxyuser2", "password": "password"})
     login_response = client.post("/login", json={"username": "proxyuser2", "password": "password"})
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User, TokenPool
     from app.encryption import encrypt_token
     from sqlmodel import select
@@ -404,7 +407,7 @@ def test_proxy_request_api_error(client: TestClient):
         assert response.status_code == 500
         assert response.json() == {"detail": "An internal error occurred while communicating with the AI provider."}
 
-def test_sync_token_missing_api_key_env(client: TestClient):
+def test_sync_token_missing_api_key_env(client: TestClient) -> None:
     with patch("os.getenv", return_value=None):
         response = client.post(
             "/sync-token",
@@ -419,7 +422,7 @@ def test_sync_token_missing_api_key_env(client: TestClient):
         assert response.status_code == 500
         assert response.json()["detail"] == "Server configuration error"
 
-def test_register_integrity_error(client: TestClient):
+def test_register_integrity_error(client: TestClient) -> None:
     from sqlalchemy.exc import IntegrityError
     from unittest.mock import patch
     with patch("sqlmodel.Session.commit", side_effect=IntegrityError("statement", "params", "orig")): # type: ignore
@@ -427,7 +430,7 @@ def test_register_integrity_error(client: TestClient):
         assert response.status_code == 400
         assert response.json() == {"detail": "Username already registered"}
 
-def test_create_workspace_integrity_error(client: TestClient):
+def test_create_workspace_integrity_error(client: TestClient) -> None:
     # Setup user and get token
     client.post("/register", json={"username": "ws_user_error", "password": "password123"})
     res = client.post("/login", json={"username": "ws_user_error", "password": "password123"})
@@ -445,7 +448,7 @@ def test_create_workspace_integrity_error(client: TestClient):
         assert res.status_code == 400
         assert res.json()["detail"] == "Workspace name already exists"
 
-def test_register_rate_limit(client: TestClient):
+def test_register_rate_limit(client: TestClient) -> None:
     for i in range(10):
         response = client.post("/register", json={"username": f"ratelimituser{i}", "password": "password123"})
         assert response.status_code == 200
@@ -454,7 +457,7 @@ def test_register_rate_limit(client: TestClient):
     assert response.status_code == 429
     assert response.json() == {"detail": "Too many registration attempts"}
 
-def test_register_cleanup(client: TestClient):
+def test_register_cleanup(client: TestClient) -> None:
     import time
     from unittest.mock import patch
     import app.main
@@ -470,7 +473,7 @@ def test_register_cleanup(client: TestClient):
 
     assert "127.0.0.1" not in app.main.register_attempts
 
-def test_login_cleanup(client: TestClient):
+def test_login_cleanup(client: TestClient) -> None:
     import time
     from unittest.mock import patch
     import app.main
@@ -486,13 +489,13 @@ def test_login_cleanup(client: TestClient):
 
     assert "127.0.0.1" not in app.main.login_attempts
 
-def test_proxy_request_invalid_token(client: TestClient):
+def test_proxy_request_invalid_token(client: TestClient) -> None:
     client.post("/register", json={"username": "proxyuser_invalid", "password": "password"})
     login_response = client.post("/login", json={"username": "proxyuser_invalid", "password": "password"})
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    from app.main import get_session
+    from app.database import get_session
     from app.models import Agent, User, TokenPool
     from sqlmodel import select
 
