@@ -332,9 +332,14 @@ export default function Home() {
       <aside className="w-64 bg-neutral-950 border-r border-neutral-800 flex flex-col" aria-label="Sidebar navigation">
         <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">The Union</h1>
-          <button aria-label="Settings" title="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md">
-            <Settings className="w-5 h-5 cursor-pointer" aria-hidden="true" />
-          </button>
+          <div className="relative group/settings">
+            <button aria-label="Settings" className="text-neutral-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 rounded-md peer">
+              <Settings className="w-5 h-5 cursor-pointer" aria-hidden="true" />
+            </button>
+            <div role="tooltip" aria-hidden="true" className="absolute top-full right-0 mt-2 rounded bg-neutral-800 px-2 py-1 text-[10px] font-medium text-neutral-200 opacity-0 transition-opacity duration-200 group-hover/settings:opacity-100 peer-focus-visible:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-neutral-700 shadow-md">
+              Settings
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4">
