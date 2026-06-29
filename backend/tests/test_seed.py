@@ -5,7 +5,7 @@ from seed import seed
 from app.models import User, Workspace, Agent
 from app.database import engine
 
-def test_seed_creates_records():
+def test_seed_creates_records() -> None:
     # Setup in-memory sqlite database for testing
     test_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
     SQLModel.metadata.create_all(test_engine)
@@ -33,7 +33,7 @@ def test_seed_creates_records():
             agent2 = session.exec(select(Agent).where(Agent.name == "Bob's Gemini")).first()
             assert agent2 is not None
 
-def test_seed_idempotent():
+def test_seed_idempotent() -> None:
     # Setup in-memory sqlite database for testing
     test_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
     SQLModel.metadata.create_all(test_engine)
@@ -56,7 +56,7 @@ def test_seed_idempotent():
             agents = session.exec(select(Agent)).all()
             assert len(agents) == 2
 
-def test_seed_main_execution():
+def test_seed_main_execution() -> None:
     import runpy
     test_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
     SQLModel.metadata.create_all(test_engine)

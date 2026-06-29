@@ -1,7 +1,7 @@
 import pytest
 from app.encryption import encrypt_token, decrypt_token, get_encryption_key
 
-def test_token_encryption_decryption():
+def test_token_encryption_decryption() -> None:
     original_token = "my_super_secret_session_token_123!"
 
     # Encrypt the token
@@ -17,7 +17,7 @@ def test_token_encryption_decryption():
     # Make sure it matches the original
     assert decrypted == original_token
 
-def test_encryption_key_generation():
+def test_encryption_key_generation() -> None:
     key1 = get_encryption_key()
     key2 = get_encryption_key()
 
@@ -29,17 +29,17 @@ import os
 from unittest.mock import patch
 import uuid
 
-def test_get_encryption_key_missing_master_key():
+def test_get_encryption_key_missing_master_key() -> None:
     with patch.dict(os.environ, clear=True):
         with pytest.raises(RuntimeError, match="UNION_MASTER_KEY environment variable is not set"):
             get_encryption_key()
 
-def test_get_encryption_key_fallback_salt():
+def test_get_encryption_key_fallback_salt() -> None:
     with patch("uuid.getnode", side_effect=Exception("Mocked exception")), \
          patch.dict(os.environ, {"UNION_MASTER_KEY": "123", "UNION_FALLBACK_SALT": "test-fallback-salt"}):
         key = get_encryption_key()
         assert len(key) > 0
 
-def test_decrypt_invalid_token():
+def test_decrypt_invalid_token() -> None:
     with pytest.raises(ValueError, match="Invalid encryption token"):
         decrypt_token("invalid_token")

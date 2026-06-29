@@ -3,47 +3,48 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from app.main import join_workspace, chat_message, sio, call_provider_api, connect, disconnect
 import uuid
 
+from typing import Generator, Any
 @pytest.fixture(autouse=True)
-def mock_ws_auth():
+def mock_ws_auth() -> Generator[None, None, None]:
     mock_user_uuid = uuid.uuid4()
     with patch('app.main.verify_ws_auth_sync', return_value=mock_user_uuid), \
          patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session, \
          patch.object(sio, 'session') as mock_session:
-        class UniversalSet(set):
-            def __contains__(self, item):
+        class UniversalSet(set[Any]):
+            def __contains__(self, item: Any) -> bool:
                 return True
-            def add(self, item):
+            def add(self, item: Any) -> None:
                 pass
 
         mock_get_session.return_value = {'workspaces': UniversalSet(), 'user_id': str(mock_user_uuid)}
 
         # We need a proper context manager mock for sio.session
         class MockSessionContext:
-            def __init__(self, sid):
+            def __init__(self, sid: str) -> None:
                 self.sid = sid
                 self.data = {'workspaces': UniversalSet(), 'user_id': str(mock_user_uuid)}
-            async def __aenter__(self):
+            async def __aenter__(self) -> dict[str, Any]:
                 return self.data
-            async def __aexit__(self, exc_type, exc_val, exc_tb):
+            async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
                 pass
         mock_session.side_effect = lambda sid: MockSessionContext(sid)
 
         yield
 
 @pytest.mark.anyio
-async def test_connect():
+async def test_connect() -> None:
     with patch('builtins.print') as mock_print:
         await connect('sid1', {})
         mock_print.assert_called_once_with('Client connected: sid1')
 
 @pytest.mark.anyio
-async def test_disconnect():
+async def test_disconnect() -> None:
     with patch('builtins.print') as mock_print:
         await disconnect('sid1')
         mock_print.assert_called_once_with('Client disconnected: sid1')
 
 @pytest.mark.anyio
-async def test_join_workspace():
+async def test_join_workspace() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'enter_room') as mock_enter, \
          patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
@@ -52,14 +53,14 @@ async def test_join_workspace():
         mock_emit.assert_called_once_with('message', {'msg': f'Someone joined {ws_id}'}, room=ws_id)
 
 @pytest.mark.anyio
-async def test_chat_message_basic():
+async def test_chat_message_basic() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
         await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': 'Hello world'})
         mock_emit.assert_called_once_with('chat_update', {'msg': 'Hello world'}, room=ws_id)
 
 @pytest.mark.anyio
-async def test_chat_message_invalid():
+async def test_chat_message_invalid() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
         await chat_message('sid1', {'workspace_id': ws_id, 'token': 'mock', 'message': None})
@@ -69,7 +70,7 @@ async def test_chat_message_invalid():
         mock_emit.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent():
+async def test_chat_message_mention_agent() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
@@ -102,7 +103,7 @@ async def test_chat_message_mention_agent():
         mock_call.assert_called_once_with("openai", "mocked_token", "Hello @TestAgent")
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent_offline():
+async def test_chat_message_mention_agent_offline() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.Session') as mock_session:
@@ -124,7 +125,7 @@ async def test_chat_message_mention_agent_offline():
         mock_emit.assert_any_call('chat_update', {'msg': 'Agent TestAgent is offline (no token available).'}, room=ws_id)
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent_api_error():
+async def test_chat_message_mention_agent_api_error() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
@@ -156,12 +157,12 @@ async def test_chat_message_mention_agent_api_error():
         mock_emit.assert_any_call('chat_update', {'msg': 'An error occurred while processing your request with TestAgent.'}, room=ws_id)
 
 @pytest.mark.anyio
-async def test_join_workspace_invalid():
+async def test_join_workspace_invalid() -> None:
     with patch.object(sio, 'enter_room') as mock_enter, \
          patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
 
         # Test invalid data type
-        await join_workspace('sid1', 'not a dict') # type: ignore
+        await join_workspace('sid1', 'not a dict')
         mock_enter.assert_not_called()
 
         # Test missing workspace_id
@@ -178,7 +179,7 @@ async def test_join_workspace_invalid():
 
 
 @pytest.mark.anyio
-async def test_join_workspace_unauthorized():
+async def test_join_workspace_unauthorized() -> None:
     ws_id = str(uuid.uuid4())
     with patch('app.main.verify_ws_auth_sync', return_value=None), \
          patch.object(sio, 'enter_room') as mock_enter, \
@@ -188,11 +189,11 @@ async def test_join_workspace_unauthorized():
         mock_emit.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_invalid_data():
+async def test_chat_message_invalid_data() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit:
         # Test invalid data type
-        await chat_message('sid1', 'not a dict') # type: ignore
+        await chat_message('sid1', 'not a dict')
         mock_emit.assert_not_called()
 
         # Test invalid workspace_id type
@@ -208,7 +209,7 @@ async def test_chat_message_invalid_data():
         mock_emit.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_mention_without_valid_agents():
+async def test_chat_message_mention_without_valid_agents() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call, \
@@ -229,7 +230,7 @@ async def test_chat_message_mention_without_valid_agents():
         mock_call.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent_no_names_empty():
+async def test_chat_message_mention_agent_no_names_empty() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.Session') as mock_session:
@@ -243,17 +244,17 @@ async def test_chat_message_mention_agent_no_names_empty():
         mock_emit.assert_called_once_with('chat_update', {'msg': 'hello@world'}, room=ws_id)
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent_invalid_user_id():
+async def test_chat_message_mention_agent_invalid_user_id() -> None:
     ws_id = str(uuid.uuid4())
     # Override get_session to return an invalid user_id
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch.object(sio, 'get_session', new_callable=AsyncMock) as mock_get_session, \
          patch('app.main.call_provider_api', new_callable=AsyncMock) as mock_call:
 
-        class UniversalSet(set):
-            def __contains__(self, item):
+        class UniversalSet(set[Any]):
+            def __contains__(self, item: Any) -> bool:
                 return True
-            def add(self, item):
+            def add(self, item: Any) -> None:
                 pass
 
         mock_get_session.return_value = {'workspaces': UniversalSet(), 'user_id': 'invalid-uuid'}
@@ -265,7 +266,7 @@ async def test_chat_message_mention_agent_invalid_user_id():
         mock_call.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_unauthorized_workspace():
+async def test_chat_message_unauthorized_workspace() -> None:
     ws_id = str(uuid.uuid4())
     # Note: the mock_get_session fixture from conftest returns a UniversalSet which contains everything
     # So we need to override the get_session mock specifically for this test
@@ -281,7 +282,7 @@ async def test_chat_message_unauthorized_workspace():
         mock_emit.assert_not_called()
 
 @pytest.mark.anyio
-async def test_chat_message_mention_agent_invalid_token():
+async def test_chat_message_mention_agent_invalid_token() -> None:
     ws_id = str(uuid.uuid4())
     with patch.object(sio, 'emit', new_callable=AsyncMock) as mock_emit, \
          patch('app.main.Session') as mock_session:

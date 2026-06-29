@@ -8,7 +8,8 @@ os.environ["ALLOWED_ORIGINS"] = "http://localhost:3000"
 
 import pytest
 
+from typing import Generator
 @pytest.fixture(autouse=True)
-def setup_env():
+def setup_env() -> Generator[None, None, None]:
     yield
     # Clean up environment variables after tests if needed

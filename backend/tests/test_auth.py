@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from app.auth import get_password_hash, verify_password, create_access_token, ALGORITHM, get_current_user
 from app.models import User
 
-def test_password_hashing():
+def test_password_hashing() -> None:
     password = "supersecretpassword123"
     hashed = get_password_hash(password)
 
@@ -16,7 +16,7 @@ def test_password_hashing():
     assert verify_password(password, hashed) is True
     assert verify_password("wrongpassword", hashed) is False
 
-def test_create_access_token():
+def test_create_access_token() -> None:
     data = {"sub": "testuser"}
     token = create_access_token(data)
 
@@ -28,7 +28,7 @@ def test_create_access_token():
     assert decoded.get("sub") == "testuser"
     assert "exp" in decoded
 
-def test_get_current_user_invalid_token():
+def test_get_current_user_invalid_token() -> None:
     from app.auth import get_current_user_id
     with pytest.raises(HTTPException) as exc_info:
         get_current_user_id("invalid.token.string")
@@ -36,7 +36,7 @@ def test_get_current_user_invalid_token():
     assert exc_info.value.detail == "Could not validate credentials"
     assert exc_info.value.headers == {"WWW-Authenticate": "Bearer"}
 
-def test_get_current_user_missing_sub():
+def test_get_current_user_missing_sub() -> None:
     from app.auth import get_current_user_id
     # Token without 'sub' claim
     data = {"other": "data"}
@@ -46,7 +46,7 @@ def test_get_current_user_missing_sub():
     assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Could not validate credentials"
 
-def test_get_current_user_not_found():
+def test_get_current_user_not_found() -> None:
     user_uuid = uuid.uuid4()
     mock_session = MagicMock()
     mock_session.get.return_value = None  # Simulate user not found
@@ -57,7 +57,7 @@ def test_get_current_user_not_found():
     assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Could not validate credentials"
 
-def test_get_current_user_success():
+def test_get_current_user_success() -> None:
     user_uuid = uuid.uuid4()
 
     mock_user = User(id=user_uuid, username="testuser", hashed_password="hashedpassword")
@@ -69,7 +69,7 @@ def test_get_current_user_success():
     assert user == mock_user
     mock_session.get.assert_called_once_with(User, user_uuid)
 
-def test_create_access_token_with_expiry():
+def test_create_access_token_with_expiry() -> None:
     data = {"sub": "testuser"}
     expires_delta = timedelta(minutes=5)
     token = create_access_token(data, expires_delta=expires_delta)
@@ -81,7 +81,7 @@ def test_create_access_token_with_expiry():
     assert decoded.get("sub") == "testuser"
     assert "exp" in decoded
 
-def test_auth_missing_secret_key():
+def test_auth_missing_secret_key() -> None:
     import importlib
     import os
     import app.auth
@@ -103,7 +103,7 @@ def test_auth_missing_secret_key():
     # Reload again to restore module state for subsequent tests
     importlib.reload(app.auth)
 
-def test_get_current_user_invalid_uuid_format():
+def test_get_current_user_invalid_uuid_format() -> None:
     from app.auth import get_current_user_id
     # Token with an invalid UUID string
     data = {"sub": "invalid-uuid-string"}
