@@ -8,7 +8,7 @@ from .auth import get_password_hash, verify_password, create_access_token, get_c
 from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import socketio
 import os
 import asyncio
@@ -278,6 +278,13 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=72)
 
+    @field_validator('password')
+    @classmethod
+    def validate_password_bytes(cls, v: str) -> str:
+        if len(v.encode('utf-8')) > 72:
+            raise ValueError('Password must be less than 72 bytes')
+        return v
+
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the register endpoint
 register_attempts: dict[str, list[float]] = {}
 register_last_cleanup: float = time.time()
@@ -371,6 +378,13 @@ app.mount("/socket.io", socket_app)
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=72)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_bytes(cls, v: str) -> str:
+        if len(v.encode('utf-8')) > 72:
+            raise ValueError('Password must be less than 72 bytes')
+        return v
 
 # 🛡️ Sentinel: Global dictionary for IP-based rate limiting on the login endpoint
 login_attempts: dict[str, list[float]] = {}
