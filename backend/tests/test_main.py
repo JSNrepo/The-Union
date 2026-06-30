@@ -514,3 +514,15 @@ def test_proxy_request_invalid_token(client: TestClient) -> None:
     response = client.post("/proxy-request", json={"agent_id": str(agent_id), "prompt": "Hello!"}, headers=headers)
     assert response.status_code == 400
     assert response.json() == {"detail": "Stored token for this agent is invalid or corrupt"}
+
+def test_register_password_bytes_limit(client: TestClient) -> None:
+    long_password = "é" * 40
+    response = client.post("/register", json={"username": "test_bytes_limit", "password": long_password})
+    assert response.status_code == 422
+    assert "Password must be less than 72 bytes" in response.json()["detail"][0]["msg"]
+
+def test_login_password_bytes_limit(client: TestClient) -> None:
+    long_password = "é" * 40
+    response = client.post("/login", json={"username": "test_bytes_limit", "password": long_password})
+    assert response.status_code == 422
+    assert "Password must be less than 72 bytes" in response.json()["detail"][0]["msg"]
