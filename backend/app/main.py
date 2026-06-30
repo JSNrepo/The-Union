@@ -9,7 +9,7 @@ from .encryption import encrypt_token, decrypt_token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
-import socketio  # type: ignore[import-untyped]
+import socketio
 import os
 import asyncio
 import uuid
