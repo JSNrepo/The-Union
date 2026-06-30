@@ -37,9 +37,8 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
           onClick={handleCopy}
           variant="ghost"
           size="icon"
-          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800"
+          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-800 peer"
           aria-label={copied ? "Copied" : "Copy message"}
-          title={copied ? "Copied" : "Copy message"}
         >
           {copied ? (
             <Check className="w-4 h-4 text-green-500" aria-hidden="true" />
@@ -47,9 +46,13 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
             <Copy className="w-4 h-4" aria-hidden="true" />
           )}
         </Button>
-        <span aria-live="polite" className="sr-only">
+        <div role="tooltip" aria-hidden="true" className="absolute top-full right-0 mt-1 rounded bg-neutral-800 px-2 py-1 text-[10px] font-medium text-neutral-200 opacity-0 transition-opacity duration-200 peer-hover:opacity-100 peer-focus-visible:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-neutral-700 shadow-md">
+          {copied ? "Copied" : "Copy message"}
+        </div>
+        <div aria-live="polite" className="sr-only">
           {copied ? "Message copied to clipboard" : ""}
-        </span>
+        </div>
+
       </div>
     </div>
   );
@@ -172,17 +175,21 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspace
           Enter ↵
         </kbd>
       )}
-      <Button
-        type="submit"
-        size="icon"
-        variant="ghost"
-        className="absolute right-1 top-1 h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
-        disabled={!message.trim() || disabled}
-        aria-label="Send message"
-        title={isLoading ? "Loading..." : disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
-      >
-        <Send className="w-4 h-4" aria-hidden="true" />
-      </Button>
+      <div className="absolute right-1 top-1 group/send">
+        <Button
+          type="submit"
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-neutral-400 hover:text-white hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-neutral-400 peer"
+          disabled={!message.trim() || disabled}
+          aria-label="Send message"
+        >
+          <Send className="w-4 h-4" aria-hidden="true" />
+        </Button>
+        <div role="tooltip" aria-hidden="true" className="absolute bottom-full right-0 mb-2 rounded bg-neutral-800 px-2 py-1 text-[10px] font-medium text-neutral-200 opacity-0 transition-opacity duration-200 group-hover/send:opacity-100 peer-focus-visible:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-neutral-700 shadow-md">
+          {isLoading ? "Loading..." : disabled ? "Select a workspace to send messages" : !message.trim() ? "Type a message to send" : "Send message"}
+        </div>
+      </div>
     </form>
   );
 });
