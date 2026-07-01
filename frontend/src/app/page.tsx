@@ -29,7 +29,7 @@ const MessageItem = React.memo(({ msg }: { msg: string }) => {
       <div className="min-w-0 flex-1 relative pr-10">
         <div className="flex items-baseline gap-2">
           <span className="font-medium text-sm">User</span>
-          <time className="text-xs text-neutral-500">Just now</time>
+          <time className="text-xs text-neutral-400">Just now</time>
         </div>
         <p className="text-neutral-300 mt-1 whitespace-pre-wrap break-words">{msg}</p>
 
@@ -160,18 +160,18 @@ const MessageInput = React.memo(({ onSendMessage, disabled, isLoading, workspace
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleInputKeyDown}
         placeholder={isLoading ? "Loading..." : disabled ? "Select a workspace to message..." : workspaceName ? `Message #${workspaceName}...` : "Message @agents or team..."}
-        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600 peer"
+        className="w-full bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-400 pr-24 focus-visible:ring-1 focus-visible:ring-neutral-600 peer"
         disabled={disabled}
         aria-label={workspaceName ? `Message in ${workspaceName} workspace` : "Message input"}
         aria-keyshortcuts="/"
       />
       {!disabled && !message && (
-        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none peer-focus:opacity-0 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500">
+        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none peer-focus:opacity-0 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-400">
           <span className="text-xs">/</span>
         </kbd>
       )}
       {!disabled && message.trim() && (
-        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none opacity-0 peer-focus:opacity-100 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-500">
+        <kbd aria-hidden="true" className="absolute right-12 pointer-events-none opacity-0 peer-focus:opacity-100 transition-opacity duration-200 hidden sm:inline-flex h-5 items-center gap-1 rounded border border-neutral-700 bg-neutral-800 px-1.5 font-mono text-[10px] font-medium text-neutral-400">
           Enter ↵
         </kbd>
       )}
@@ -309,7 +309,7 @@ export default function Home() {
       return <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading agents</span></div>;
     }
     if (agents.length === 0) {
-      return <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No agents available</span></div>;
+      return <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No agents available</span></div>;
     }
     return agents.map((agent) => (
       <div
@@ -323,7 +323,7 @@ export default function Home() {
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-sm truncate">{agent.name}</span>
-            <span className="text-[10px] text-neutral-500 truncate leading-none" title={agent.provider}>{agent.provider}</span>
+            <span className="text-[10px] text-neutral-400 truncate leading-none" title={agent.provider}>{agent.provider}</span>
           </div>
         </div>
         <span className="sr-only">Online</span>
@@ -351,7 +351,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto py-4">
           <div className="px-4 mb-6">
-            <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Workspaces</h2>
+            <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">Workspaces</h2>
             <div className="space-y-1">
               {isLoading ? (
                 ["w-full", "w-11/12", "w-5/6"].map((width, i) => (
@@ -360,7 +360,7 @@ export default function Home() {
               ) : error ? (
                 <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading workspaces</span></div>
               ) : workspaces.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-500">No workspaces</span></div>
+                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No workspaces</span></div>
               ) : (
                 workspaces.map((ws) => (
                   <WorkspaceItem
@@ -375,7 +375,7 @@ export default function Home() {
           </div>
 
           <div className="px-4">
-            <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">AI Pool</h2>
+            <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">AI Pool</h2>
             <div className="space-y-2">
               {agentsListContent}
             </div>
@@ -408,7 +408,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 focus-visible:ring-inset" role="log" aria-live="polite" aria-label="Message history" tabIndex={0}>
           {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 space-y-4 my-auto">
               <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" aria-hidden="true" />
               <span className="sr-only">Loading workspace data...</span>
             </div>
@@ -434,7 +434,7 @@ export default function Home() {
               </div>
             </div>
           ) : !activeWorkspace ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                 <Hash className="w-6 h-6 text-neutral-400" aria-hidden="true" />
               </div>
@@ -444,7 +444,7 @@ export default function Home() {
               </div>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-neutral-500 space-y-4 my-auto">
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 space-y-4 my-auto">
               <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-neutral-400" aria-hidden="true" />
               </div>
