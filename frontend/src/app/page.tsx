@@ -309,7 +309,7 @@ export default function Home() {
       return <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading agents</span></div>;
     }
     if (agents.length === 0) {
-      return <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No agents available</span></div>;
+      return <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Bot className="w-5 h-5 text-neutral-400 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No agents available</span></div>;
     }
     return agents.map((agent) => (
       <div
@@ -360,7 +360,7 @@ export default function Home() {
               ) : error ? (
                 <div className="flex items-center gap-2 text-sm text-red-400 px-2 py-2 bg-red-950/30 rounded-md border border-red-900/50"><AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /><span>Error loading workspaces</span></div>
               ) : workspaces.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-600 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No workspaces</span></div>
+                <div className="flex flex-col items-center justify-center py-4 px-2 border border-dashed border-neutral-800 rounded-md bg-neutral-800/20 text-center"><Hash className="w-5 h-5 text-neutral-400 mb-2" aria-hidden="true" /><span className="text-xs text-neutral-400">No workspaces</span></div>
               ) : (
                 workspaces.map((ws) => (
                   <WorkspaceItem

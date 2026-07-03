@@ -88,3 +88,6 @@
 ## 2026-06-29 - Accessible Custom Tooltips vs Native Title Attribute
 **Learning:** Relying solely on the native `title` attribute for icon-only buttons (like a Settings gear) provides a poor experience because they are often not accessible via keyboard focus and have inconsistent styling across browsers.
 **Action:** Always implement custom tooltips using ARIA roles (`role="tooltip"`), `aria-hidden="true"`, and CSS focus/hover states (e.g., `peer-focus-visible:opacity-100 group-hover:opacity-100`) to ensure tooltips are both visually consistent and accessible to all users.
+## 2024-07-03 - Improve Empty State Icon Contrast
+**Learning:** Using `text-neutral-600` for decorative icons in empty states against a dark background (`bg-neutral-800/20` and `bg-neutral-900`) fails WCAG 2.1 AA contrast requirements and makes the icons difficult to see, reducing their effectiveness as visual anchors.
+**Action:** Always use `text-neutral-400` or lighter for icons and text against dark backgrounds to ensure accessible contrast ratios (> 4.5:1).

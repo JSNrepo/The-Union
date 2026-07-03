@@ -71,6 +71,11 @@ When multiple humans tag an agent with conflicting prompts simultaneously, the s
 ### App Demo (Click to play)
 [![App Screenshot](assets/screenshot.png)](assets/demo.webm)
 
+#### Accessible Empty State Contrast
+To improve accessibility and readability, the contrast ratio of the placeholder icons used in the empty states for the sidebar has been increased, ensuring compliance with WCAG 2.1 AA standards for dark backgrounds.
+
+![Accessible Empty State Contrast](assets/empty_states_contrast.png)
+
 ### UX Enhancements
 ![Sidebar UX Truncation & Context](assets/sidebar_ux_demo.png)
 
