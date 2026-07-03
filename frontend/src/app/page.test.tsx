@@ -316,4 +316,170 @@ describe('Home Page', () => {
 
     window.location = originalLocation;
   });
+
+  it('handles api fetch returning not ok', async () => {
+    (global.fetch as Mock).mockResolvedValueOnce({ ok: false });
+    (global.fetch as Mock).mockResolvedValueOnce({ ok: false });
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Connection Error')).toBeInTheDocument();
+    });
+  });
+
+  it('displays no agents available when agents list is empty', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      return Promise.reject(new Error('not found'));
+    });
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('No agents available')).toBeInTheDocument();
+    });
+  });
+
+  it('sends message via MessageInput form submission', async () => {
+    const mockEmit = vi.fn();
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      emit: mockEmit,
+    } as unknown);
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const engWorkspaceButton = screen.getByText('Engineering');
+    fireEvent.click(engWorkspaceButton);
+
+    const input = screen.getByPlaceholderText('Message #Engineering...');
+    fireEvent.change(input, { target: { value: 'Testing input' } });
+    fireEvent.submit(input);
+
+    expect(mockEmit).toHaveBeenCalledWith('chat_message', expect.objectContaining({
+      workspace_id: '2',
+      message: 'Testing input'
+    }));
+  });
+
+  it('focuses input on / key press', async () => {
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    const engWorkspaceButton = screen.getByText('Engineering');
+    fireEvent.click(engWorkspaceButton);
+
+    const input = screen.getByPlaceholderText('Message #Engineering...');
+    expect(input).not.toHaveFocus();
+
+    // Create an event that is cancelable so preventDefault can be called and tracked
+    const event = new KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true });
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+    document.dispatchEvent(event);
+
+    expect(preventDefaultSpy).toHaveBeenCalled();
+    expect(input).toHaveFocus();
+  });
+
+  it('logs error when clipboard fails to copy', async () => {
+    const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    let messageCallback: (data: { msg: string }) => void = () => {};
+
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      // @ts-expect-error Mock implementation
+      on: vi.fn((event, callback) => {
+        if (event === 'message') {
+          messageCallback = callback;
+        }
+      }),
+      emit: vi.fn(),
+      close: vi.fn(),
+    });
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    Object.assign(navigator, {
+      clipboard: { writeText: vi.fn().mockRejectedValue(new Error('Copy failed')) },
+    });
+
+    render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    // Simulate receiving a message
+    act(() => {
+      messageCallback({ msg: 'Hello from socket' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Hello from socket')).toBeInTheDocument();
+    });
+
+    const copyButton = screen.getByRole('button', { name: 'Copy message' });
+    fireEvent.click(copyButton);
+
+    await waitFor(() => {
+      expect(consoleErrorMock).toHaveBeenCalledWith("Failed to copy message: ", expect.any(Error));
+    });
+
+    consoleErrorMock.mockRestore();
+  });
+
+  it('connects to websocket and cleans up on unmount', async () => {
+    const mockClose = vi.fn();
+    const mockIo = vi.mocked(io);
+    mockIo.mockReturnValue({
+      ...vi.mocked(io)(),
+      close: mockClose,
+      on: vi.fn(),
+      emit: vi.fn(),
+    } as unknown);
+
+    (global.fetch as Mock).mockImplementation((url: string) => {
+      if (url.includes('/workspaces')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockWorkspaces) });
+      if (url.includes('/agents')) return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) });
+      return Promise.reject(new Error('not found'));
+    });
+
+    const { unmount } = render(<Home />);
+    await waitFor(() => {
+      expect(screen.getByText('Engineering')).toBeInTheDocument();
+    });
+
+    // Changing workspace should disconnect and reconnect
+    const engWorkspaceButton = screen.getByText('Engineering');
+    fireEvent.click(engWorkspaceButton);
+
+    await waitFor(() => {
+       expect(mockClose).toHaveBeenCalled();
+    });
+
+    unmount();
+
+    expect(mockClose).toHaveBeenCalledTimes(2);
+  });
 });
