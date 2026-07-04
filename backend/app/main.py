@@ -321,11 +321,15 @@ def register(user: UserCreate, request: Request, session: Session = Depends(get_
 
         register_attempts.setdefault(client_ip, []).append(now)
 
+    # 🛡️ Sentinel: Mitigate timing attacks by always hashing the password
+    # regardless of whether the user exists or not.
+    hashed_pwd = get_password_hash(user.password)
+
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    new_user = User(username=user.username, hashed_password=get_password_hash(user.password))
+    new_user = User(username=user.username, hashed_password=hashed_pwd)
     session.add(new_user)
     try:
         session.commit()
