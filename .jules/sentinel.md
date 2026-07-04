@@ -57,3 +57,7 @@
 **Vulnerability:** Missing rate limiting on the `/register` endpoint allowed attackers to perform a Denial of Service (DoS) attack by exhausting CPU resources via repeated expensive bcrypt password hashing operations.
 **Learning:** The `/register` endpoint is a sensitive endpoint that performs computationally heavy tasks. Even if the login endpoint is rate-limited, other unauthenticated endpoints like registration that consume significant resources can be exploited if left unprotected.
 **Prevention:** Apply rate limiting to all unauthenticated endpoints that perform expensive operations or are otherwise sensitive to prevent resource exhaustion and abuse.
+## 2026-07-04 - Timing Attack Vulnerability in Register Endpoint
+**Vulnerability:** The `/register` endpoint returned much faster when a user did not exist in the database because it skipped the computationally expensive `bcrypt` hash calculation. This timing difference allowed attackers to enumerate valid usernames.
+**Learning:** Checking for user existence before performing expensive operations like hashing creates a classic timing side-channel. Even small differences in response time can confirm whether a username is valid.
+**Prevention:** To prevent username enumeration via timing attacks on authentication endpoints (like `/register`), always execute the expensive password hash calculation (e.g., against the provided password or a dummy value) even if the user lookup fails, ensuring consistent response times regardless of the user's existence.
